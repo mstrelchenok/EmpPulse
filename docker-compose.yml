@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: emppulse_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./docker-data/postgres:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d emppulse_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - emp-pulse-network
+  emp-pulse:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Переопределяем URL, чтобы приложение внутри Docker видело базу по имени 'db'
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/emppulse_db
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - emp-pulse-network
+
+networks:
+  emp-pulse-network:
+    driver: bridge
