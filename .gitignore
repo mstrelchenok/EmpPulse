@@ -34,6 +34,9 @@ build/
 
 ### Node ###
 frontend/node_modules/
+frontend/node/
+frontend/dist/
+frontend/.env
 
 docker-data/
 

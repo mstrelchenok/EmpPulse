@@ -1,13 +1,12 @@
 import React from 'react';
-import type { ScreenType, ModalType, Employee, LeaveRequest } from '../types';
+import type { ScreenType } from '../types';
 
 interface Props {
   currentScreen: ScreenType;
   setScreen: (screen: ScreenType) => void;
-  openModal: (modal: ModalType, emp?: Employee, requestObj?: LeaveRequest) => void;
 }
 
-const Sidebar: React.FC<Props> = ({ currentScreen, setScreen, openModal }) => {
+const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-top">

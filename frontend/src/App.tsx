@@ -54,7 +54,6 @@ const App: React.FC = () => {
       <Sidebar 
         currentScreen={currentScreen} 
         setScreen={setCurrentScreen} 
-        openModal={handleOpenModal} 
       />
 
       <main className="main-content-area">

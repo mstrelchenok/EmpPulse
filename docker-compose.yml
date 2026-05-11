@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: emppulse_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - ./docker-data/postgres:/var/lib/postgresql/data
 
