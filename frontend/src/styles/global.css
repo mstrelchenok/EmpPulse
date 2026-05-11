@@ -1,0 +1,518 @@
+/* ============================================================
+   GLOBAL RESETS & BASE
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #000; }
+
+/* Root app shell — centered, full-height, white bg */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+  background-color: #FAFAFD;
+  color: #1a1a1a;
+}
+
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+
+/* Logo */
+.brand-logo { font-size: 26px; font-weight: 800; margin-bottom: 40px; color: #000; }
+
+/* Navigation links */
+.sidebar-nav { display: flex; flex-direction: column; gap: 8px; }
+
+.nav-item {
+  text-align: left; padding: 12px 16px; border-radius: 8px; color: #8C95A5;
+  font-weight: 500; font-size: 15px; background-color: #F3F4F6; border: none; cursor: pointer;
+  transition: all 0.2s ease;
+}
+.nav-item:hover { background-color: #E5E7EB; }
+.nav-item.active { background-color: #5B45FF; color: #ffffff; }
+
+/* User profile card at the bottom of the sidebar */
+.user-profile {
+  background-color: #5B45FF; border-radius: 12px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 24px; color: white;
+}
+.user-avatar { width: 34px; height: 34px; background-color: #D1D5DB; border-radius: 50%; }
+.user-info { display: flex; flex-direction: column; }
+.user-name { font-weight: 600; font-size: 13px; }
+.user-role { font-size: 11px; opacity: 0.8; }
+
+/* Bottom controls row: theme toggle, language switcher, logout */
+.sidebar-controls { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+
+.theme-toggle { width: 48px; height: 26px; background-color: #E5E7EB; border-radius: 16px; display: flex; align-items: center; padding: 3px; cursor: pointer; }
+.toggle-thumb { width: 20px; height: 20px; background-color: #5B45FF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; }
+.lang-toggles { display: flex; gap: 8px; font-size: 18px; cursor: pointer; }
+
+
+/* ============================================================
+   MAIN CONTENT AREA & PAGE HEADER
+   ============================================================ */
+.main-content-area { flex: 1; padding: 48px; overflow-y: auto; max-height: 100vh; }
+
+/* Constrain page content width */
+.screen-container { max-width: 960px; margin: 0 auto; }
+
+/* Top bar: page title + actions (search, filter) */
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+.page-header h2 { font-size: 34px; font-weight: 700; }
+.header-actions { display: flex; gap: 16px; }
+
+.search-bar { background-color: #EEEEEE; padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; }
+.search-bar input { border: none; background: transparent; outline: none; font-size: 14px; width: 130px; }
+.filter-dropdown { background-color: #EEEEEE; padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; gap: 16px; font-size: 14px; color: #666; cursor: pointer; }
+
+
+/* ============================================================
+   ACCORDIONS
+   ============================================================ */
+.department-title { font-size: 22px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 20px; user-select: none; }
+
+/* Arrow icon that rotates when section is expanded */
+.chevron { transition: transform 0.2s ease; display: inline-block; font-size: 16px; }
+.chevron.expanded { transform: rotate(90deg); }
+
+
+/* ============================================================
+   EMPLOYEE LIST ROWS
+   ============================================================ */
+
+/* White card wrapper for list sections */
+.card-box { background-color: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+.list-box { display: flex; flex-direction: column; gap: 12px; }
+
+/* Single row item */
+.employee-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background-color: #E8E8E8; padding: 16px 20px; border-radius: 12px;
+  position: relative; overflow: hidden; transition: background-color 0.2s;
+}
+.clickable { cursor: pointer; }
+.clickable:hover { background-color: #DFDFDF; }
+.emp-name { font-size: 16px; font-weight: 600; color: #333; }
+.emp-meta { display: flex; align-items: center; gap: 16px; }
+
+/* Delete bin button that slides in from the right on row hover */
+.hover-slide-container { cursor: pointer; padding-right: 20px; transition: padding-right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); }
+.slide-bin-btn {
+  position: absolute; right: -50px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 20px; cursor: pointer;
+  transition: right 0.3s cubic-bezier(0.1, 0.9, 0.2, 1); padding: 8px;
+}
+.hover-slide-container:hover { padding-right: 60px; background-color: #DFDFDF; }
+.hover-slide-container:hover .slide-bin-btn { right: 14px; }
+
+/* Dashed border variants for unassigned / pending items */
+.dashed-row { background-color: transparent; border: 2px dashed #A0A0A0; }
+.dashed-active-row { background-color: #F8F9FA; border: 2px dashed #6C757D; }
+.dashed-wrapper { border: 2px dashed #8C95A5; padding: 16px; }
+
+
+/* ============================================================
+   BADGES & STATUS LABELS
+   ============================================================ */
+
+/* Leave-type badge (Vacation / Sick / Personal) */
+.badge { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+.badge-personal { background-color: #FFF3CD; color: #856404; }
+.badge-sick { background-color: #F8D7DA; color: #721C24; }
+.badge-vacation { background-color: #D4EDDA; color: #155724; }
+
+.until-text { font-size: 13px; font-weight: 500; color: #444; min-width: 120px; text-align: right; }
+
+/* Request status text (PENDING / APPROVED / REJECTED / CANCELLED) */
+.status-label { font-weight: 700; font-size: 12px; letter-spacing: 0.5px; }
+.status-pending { color: #6C757D; }
+.status-approved { color: #28A745; }
+.status-rejected, .status-cancelled { color: #DC3545; }
+
+
+/* ============================================================
+   PROFILE PAGE
+   ============================================================ */
+
+/* Side-by-side banner + vacation widget */
+.profile-top-grid { display: flex; gap: 24px; margin-bottom: 32px; align-items: stretch; }
+
+/* Purple banner with name, email, stats */
+.profile-banner { flex: 1; background-color: #5B45FF; border-radius: 16px; padding: 24px; color: white; display: flex; justify-content: space-between; }
+.banner-info h3 { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+.email-sub { font-size: 13px; opacity: 0.8; margin-bottom: 16px; }
+.btn-pill-action { background-color: #ffffff; color: #5B45FF; border: none; padding: 6px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.banner-stats { display: flex; flex-direction: column; justify-content: center; gap: 8px; font-size: 13px; }
+.banner-stats div { display: flex; justify-content: space-between; gap: 24px; }
+.banner-stats label { opacity: 0.8; }
+.banner-stats span { font-weight: 600; }
+
+/* Compact vacation balance card on the right */
+.vacation-widget { width: 240px; background-color: #ffffff; border-radius: 16px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+.vacation-widget h4 { font-size: 16px; font-weight: 600; }
+.balance-badge-card { background-color: #F8F9FA; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px; font-size: 13px; font-weight: 600; text-align: center; }
+.btn-logout-pill { background-color: #5B45FF; color: white; border: none; padding: 6px 16px; border-radius: 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+/* Logged / unpaid hours table */
+.table-box { padding: 16px 24px; }
+.table-header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-weight: 700; font-size: 13px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #EEE; }
+.table-row-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; font-size: 14px; background-color: #E8E8E8; margin-bottom: 8px; padding: 12px 16px; border-radius: 8px; }
+.table-footer-actions { display: flex; justify-content: center; gap: 16px; margin-top: 16px; }
+.btn-tiny-pill { background-color: #A0A0A0; color: white; border: none; padding: 4px 16px; border-radius: 12px; font-size: 11px; cursor: pointer; }
+
+
+/* ============================================================
+   SHARED BUTTONS
+   ============================================================ */
+.center-action { display: flex; justify-content: center; }
+.primary-btn { background-color: #5B45FF; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+.primary-btn:hover { opacity: 0.9; }
+.full-width { width: 100%; margin-top: 16px; }
+.icon-btn { background: none; border: none; cursor: pointer; font-size: 18px; }
+
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+
+/* Semi-transparent backdrop with blur */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 999; backdrop-filter: blur(2px); }
+
+/* Centered white card */
+.modal-container { width: 100%; max-width: 420px; background-color: #ffffff; border-radius: 16px; padding: 32px 24px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 18px; cursor: pointer; color: #666; }
+
+/* Confirmation dialog (delete / logout / change password) */
+.modal-confirm { text-align: center; }
+.modal-confirm h3 { font-size: 20px; font-weight: 600; margin-bottom: 24px; line-height: 1.4; }
+.modal-buttons { display: flex; justify-content: center; gap: 16px; }
+.btn-secondary { background-color: #E5E7EB; border: none; padding: 8px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+.btn-outline-primary { background-color: transparent; border: 1px solid #5B45FF; color: #5B45FF; padding: 8px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+/* Generic form layout used by add/edit modals */
+.modal-form h2 { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 24px; }
+.modal-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; margin-bottom: 16px; color: #333; }
+.modal-form input, .modal-form select, .modal-form textarea { border: 1px solid #DDD; background-color: #F8F9FA; padding: 10px 12px; border-radius: 6px; font-size: 14px; outline: none; }
+
+/* "Add unassigned employee" modal employee card */
+.unassigned-card { background-color: #F8F9FA; border: 1px solid #EEE; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+
+/* Remaining vacation days hint shown inside leave forms */
+.balance-hint { background-color: #5B45FF; color: white; font-size: 11px; text-align: center; padding: 4px; border-radius: 12px; margin: -8px 0 16px 0; }
+
+/* Request detail summary shown in the accept-request modal */
+.request-summary-box { background-color: #F8F9FA; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+.request-summary-box h3 { margin-bottom: 8px; }
+.reason-box { background-color: #E8E8E8; padding: 10px; border-radius: 6px; font-weight: 400; font-size: 13px; }
+
+/* Department admin list row inside the add-department modal */
+.admin-row { display: flex; justify-content: space-between; align-items: center; background-color: #E8E8E8; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; }
+.btn-remove { background-color: #333; color: white; border: none; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; }
+
+/* --- Department Detail Screen Formatting --- */
+.department-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.column-section-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+
+.admin-block-item {
+  background-color: #E8E8E8;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.schedule-matrix-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.day-schedule-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #F0F0F0;
+  padding-bottom: 12px;
+}
+
+.day-schedule-group:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.day-label {
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+  width: 110px;
+}
+
+.shifts-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.shift-pill-row {
+  display: flex;
+  align-items: center;
+  background-color: #F8F9FA;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #E5E7EB;
+  font-size: 13px;
+}
+
+.shift-index {
+  margin-right: 8px;
+  font-weight: 600;
+  color: #666;
+}
+
+.time-range-display {
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+/* --- Expanded Modal Additions --- */
+.admin-name-pill {
+  flex: 1;
+  background-color: #FAFAFD;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #DDD;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0 8px;
+}
+
+.btn-pill-secondary {
+  background-color: #E5E7EB;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #333;
+  rotate: 180deg;
+}
+
+/* ============================================================
+   AUTHENTICATION LAYOUT (LOGIN PAGE)
+   ============================================================ */
+
+/* Full-screen viewport wrapper — centers the login card */
+.auth-layout {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #FAFAFD;
+}
+
+/* Rounded white container card with inner padding and drop shadow */
+.auth-card {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 48px 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  text-align: center;
+  border: 1px solid #E5E7EB;
+}
+
+/* Main brand identifier */
+.auth-brand {
+  font-size: 32px;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 8px;
+}
+
+/* Secondary header */
+.auth-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 32px;
+}
+
+/* Conditional alert banner for validation errors */
+.auth-error-msg {
+  background-color: #F8D7DA;
+  color: #721C24;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+/* Input layout container */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: left;
+}
+
+/* Vertical stack labels */
+.auth-input-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Styled input fields matching the app's standard forms */
+.auth-input-label input {
+  border: 1px solid #DDD;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  background-color: #FAFAFD;
+}
+
+/* Expanded primary submission button */
+.auth-submit-btn {
+  margin-top: 12px;
+  padding: 14px;
+  font-size: 16px;
+  width: 100%;
+}
+
+/* ============================================================
+   NEW MODAL LAYOUTS (ADD EMPLOYEE & EDIT ADMINS)
+   ============================================================ */
+
+/* 2-Column form grouping for First Name / Surname */
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Custom Checkbox Headers */
+.checkbox-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 8px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.custom-checkbox {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #5B45FF;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5B45FF;
+  font-weight: 800;
+  font-size: 14px;
+  transition: all 0.1s ease;
+}
+
+.custom-checkbox.checked::after {
+  content: "✕"; /* Using the exact cross mark from your design */
+}
+
+/* Split Modal Footer Buttons */
+.modal-footer-split {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-split-action {
+  flex: 1;
+  background-color: #5B45FF;
+  color: white;
+  border: none;
+  padding: 14px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.btn-split-action:hover {
+  opacity: 0.9;
+}
+
+/* Edit Administrators List Formatting */
+.edit-admins-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0 24px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.edit-admin-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.edit-admin-item span.index {
+  font-weight: 600;
+  font-size: 15px;
+  color: #000;
+  width: 16px;
+}
+
+.edit-admin-pill {
+  flex: 1;
+  background-color: #E8E8E8;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #000;
+}

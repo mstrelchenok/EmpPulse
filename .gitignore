@@ -32,4 +32,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Node ###
+frontend/node_modules/
+
 docker-data/
+
+.DS_Store

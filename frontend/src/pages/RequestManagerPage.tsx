@@ -1,0 +1,50 @@
+import React, { useState } from 'react';
+import type { ModalType, Employee, LeaveRequest } from '../types';
+import { PENDING_REQUESTS } from '../utils/mockData';
+
+interface Props {
+  openModal: (modal: ModalType, emp?: Employee, requestObj?: LeaveRequest) => void;
+}
+
+const RequestManagerPage: React.FC<Props> = ({ openModal }) => {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className="screen-container">
+      <header className="page-header">
+        <h2>Requests</h2>
+        <div className="filter-dropdown"><span>Filter by</span>...</div>
+      </header>
+
+      <div className="accordion-section">
+        <h3 className="department-title" onClick={() => setExpanded(!expanded)}>
+          Pending Requests <span className={`chevron ${expanded ? 'expanded' : ''}`}>►</span>
+        </h3>
+
+        {expanded && (
+          <div className="card-box list-box dashed-wrapper">
+            {PENDING_REQUESTS.map(req => (
+              <div
+                key={req.id}
+                className="employee-row clickable"
+                onClick={() => openModal('ACCEPT_REQUEST', undefined, req)}
+              >
+                <span className="emp-name">{req.employeeName}</span>
+                <div className="emp-meta">
+                  <span className={`badge badge-${req.type.toLowerCase()}`}>{req.type}</span>
+                  <span className="until-text">{req.dateRange}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="center-action" style={{ marginTop: 40 }}>
+        <button className="primary-btn" onClick={() => openModal('CREATE_REQUEST')}>+ create request</button>
+      </div>
+    </div>
+  );
+};
+
+export default RequestManagerPage;
