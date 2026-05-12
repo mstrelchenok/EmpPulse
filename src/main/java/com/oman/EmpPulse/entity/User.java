@@ -31,13 +31,14 @@ public class User {
     @ColumnTransformer(write = "?::language")
     private String language;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, columnDefinition = "role")
     @ColumnTransformer(write = "?::role")
-    private String role; // "OWNER", "ADMIN", "WORKER"
+    private UserRole role;
 
     public User() {}
 
-    public User(String name, String surname, String email, String passHash, String theme, String language, String role) {
+    public User(String name, String surname, String email, String passHash, String theme, String language, UserRole role) {
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -68,6 +69,6 @@ public class User {
     public String getLanguage() { return language; }
     public void setLanguage(String language) { this.language = language; }
     
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public UserRole getRole() { return role; }
+    public void setRole(UserRole role) { this.role = role; }
 }

@@ -1,6 +1,7 @@
 package com.oman.EmpPulse.config;
 
 import com.oman.EmpPulse.entity.User;
+import com.oman.EmpPulse.entity.UserRole;
 import com.oman.EmpPulse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -34,7 +35,7 @@ public class AppStartupRunner implements CommandLineRunner {
             owner.setPassHash(passwordEncoder.encode(ownerPassword));
             owner.setTheme("LIGHT");
             owner.setLanguage("ENG");
-            owner.setRole("OWNER");
+            owner.setRole(UserRole.OWNER);
             userRepository.save(owner);
             System.out.println("Owner account seeded successfully.");
         }
