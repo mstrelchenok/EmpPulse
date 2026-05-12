@@ -1,6 +1,7 @@
 // src/components/screens/MyRequestsScreen.tsx
 import React, { useState } from 'react';
 import type { ModalType, LeaveRequest } from '../types';
+import trashIcon from '../assets/trash-icon.png.webp';
 
 interface Props { 
   openModal: (modal: ModalType, emp?: null, requestObj?: LeaveRequest) => void; 
@@ -53,7 +54,7 @@ const MyRequestsScreen: React.FC<Props> = ({ openModal }) => {
                   title={req.status === 'APPROVED' ? 'Cancel Approved Leave' : 'Delete Record'}
                 >
                   {req.status === 'APPROVED' ? '✕' : (
-                  <img src="/src/assets/trash-icon.png.webp" alt="Delete" width={30} height={30} />
+                  <img src={trashIcon} alt="Delete" width={30} height={30} />
                 )}
                 </button>
               </div>
