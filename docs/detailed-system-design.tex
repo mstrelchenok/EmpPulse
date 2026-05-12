@@ -1,0 +1,818 @@
+\documentclass[11pt,a4paper]{article}
+
+% ── Packages ──
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{parskip}
+
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!60!black,
+    urlcolor=blue!70!black,
+    citecolor=black,
+    pdftitle={EmpPulse -- Detailed System Design},
+    pdfauthor={Group 6}
+}
+
+% ── Code listings ──
+\definecolor{codebg}{rgb}{0.96,0.96,0.96}
+\definecolor{codegreen}{rgb}{0,0.5,0}
+\definecolor{codeblue}{rgb}{0.15,0.15,0.65}
+\definecolor{codepurple}{rgb}{0.55,0,0.75}
+
+\lstset{
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{codebg},
+    breaklines=true,
+    frame=single,
+    showstringspaces=false,
+    keywordstyle=\color{codeblue}\bfseries,
+    stringstyle=\color{codepurple},
+    commentstyle=\color{codegreen}\itshape,
+    tabsize=2,
+    xleftmargin=0.3cm,
+    aboveskip=0.8em,
+    belowskip=0.8em
+}
+
+\lstdefinestyle{json}{
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{codebg},
+    breaklines=true,
+    frame=single,
+    showstringspaces=false,
+    stringstyle=\color{codepurple},
+    morestring=[b]",
+    morekeywords={true,false,null}
+}
+
+\lstdefinestyle{mermaid}{
+    basicstyle=\ttfamily\footnotesize,
+    backgroundcolor=\color{codebg},
+    breaklines=true,
+    frame=single,
+    showstringspaces=false
+}
+
+% ── Headers ──
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small EmpPulse}
+\fancyhead[R]{\small Detailed System Design}
+\fancyfoot[C]{\thepage}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Title page ──
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries EmpPulse\par}
+\vspace{0.5cm}
+{\LARGE Detailed System Design\par}
+\vspace{2cm}
+{\Large Group 6\par}
+\vspace{1cm}
+{\large\today\par}
+\vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section{Introduction}
+
+EmpPulse is an employee management system that enables organizations to track leave requests, log working hours, and manage departments. The system supports three roles---Employee, Administrator, and Owner---each with distinct permissions. This document provides the detailed system design, expanding upon the initial system design with precise architectural decisions, module internals, data models, API contracts, UI flows, security mechanisms, error handling, and deployment configuration.
+
+% ══════════════════════════════════════════════════════════════
+\section{Refined System Architecture}
+\label{sec:architecture}
+
+\subsection{Overview}
+
+EmpPulse follows a monolithic Spring Boot architecture with a React-based frontend served as static assets. The backend exposes a REST API consumed by the single-page application (SPA). Session-based authentication (JSESSIONID) secures all protected endpoints. An external SMTP service handles transactional emails (credential delivery, password resets, notification emails). Both the Java application and PostgreSQL database run inside Docker containers on a single server.
+
+\subsection{Architecture Diagram}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{architectureSS.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Component Responsibilities}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{React Frontend} -- Single-page application served as static assets; communicates with the backend exclusively through REST API calls with session cookies.
+    \item \textbf{REST API Layer} -- Spring MVC controllers; receives HTTP requests, delegates to service layer, returns JSON responses.
+    \item \textbf{Authentication Module} -- Spring Security configuration using HTTP session authentication (\texttt{JSESSIONID} cookie). Handles login, logout, session validation, and password reset token management.
+    \item \textbf{User Management Module} -- CRUD for Users, Employees, Admins; enforces role-based creation rules and visibility constraints.
+    \item \textbf{Department Management Module} -- CRUD for Departments; manages Admin--Department and Employee--Department associations.
+    \item \textbf{Leave Request Module} -- Full lifecycle of leave requests including creation, modification, modification-requests, approval/rejection, cancellation, and vacation balance updates.
+    \item \textbf{Logged Hours Module} -- Creation, editing, deletion of work hour logs; implements overlap/adjacency merging logic.
+    \item \textbf{Default Hours Module} -- Manages default weekly hour templates for Departments and Employees.
+    \item \textbf{Export Module} -- Generates CSV data archives scoped to the requesting Admin's departments.
+    \item \textbf{Notification Module} -- Sends transactional emails via SMTP (credentials, password changes, leave status updates).
+    \item \textbf{Scheduler} -- A \texttt{@Scheduled} Spring component that runs at midnight to auto-generate logged hours for the following day based on default hours configuration.
+    \item \textbf{Validation Layer} -- Shared validators enforcing business rules (date ranges, email format, uniqueness, ownership checks).
+    \item \textbf{PostgreSQL Database} -- Persistent relational storage running in a Docker container with a mounted volume for data durability.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\newpage
+\section{Detailed Module Design}
+\label{sec:modules}
+
+Each module follows a standard layered pattern: \texttt{Controller} $\rightarrow$ \texttt{Service} $\rightarrow$ \texttt{Repository}, with dedicated \texttt{Validator} and \texttt{DTO} classes.
+
+\subsection{Module Overview Diagram}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{modularSS.png}
+    \caption{Enter Caption}
+    \label{fig:placeholder}
+\end{figure}
+
+% ── 3.1 Authentication Module ──
+\subsection{Authentication Module}
+
+\textbf{Responsibility:} Handles user sign-in, sign-out, session management, and password reset flows.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{AuthController} -- Endpoints: login, logout, forgot-password, reset-password.
+    \item \texttt{AuthService} -- Validates credentials, creates/invalidates HTTP sessions, generates password reset tokens.
+    \item \texttt{PasswordResetTokenRepository} -- Stores time-limited reset tokens (15-minute expiry).
+\end{itemize}
+
+\textbf{Data owned:} Session store (server-side, Spring default), password reset tokens.
+
+\textbf{Public operations:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{login(email, password)} -- Authenticates and returns JSESSIONID cookie.
+    \item \texttt{logout()} -- Invalidates current session.
+    \item \texttt{forgotPassword(email)} -- Generates reset token and sends email.
+    \item \texttt{resetPassword(token, newPassword)} -- Validates token, updates password hash.
+\end{itemize}
+
+\textbf{Dependencies:} User Management Module (credential lookup), Notification Module (emails).
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Invalid credentials return \texttt{401 Unauthorized} without specifying which field was wrong.
+    \item Reset token expires after 15 minutes; new request invalidates previous token.
+    \item Password change invalidates all other active sessions for that user.
+\end{itemize}
+
+\textbf{Error cases:} Invalid credentials, expired/invalid reset token, email not found.
+
+% ── 3.2 User Management Module ──
+\subsection{User Management Module}
+
+\textbf{Responsibility:} CRUD operations for Users, Employees, Admins, and Premium Vacation Days. Enforces role-based creation, visibility, and modification rules.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{UserController} -- Endpoints for profile, user CRUD.
+    \item \texttt{UserService} -- Orchestrates User + Employee/Admin creation atomically.
+    \item \texttt{EmployeeService} -- Employee-specific logic (vacation balance, activation/deactivation).
+    \item \texttt{AdminService} -- Admin-specific logic (department oversight assignments).
+    \item \texttt{PremiumVacationDaysService} -- Manages bonus vacation days per employee per year.
+    \item \texttt{UserRepository}, \texttt{EmployeeRepository}, \texttt{AdminRepository}, \texttt{PremiumVacationDaysRepository}.
+    \item \texttt{UserValidator} -- Email uniqueness, required-field checks, role constraints.
+\end{itemize}
+
+\textbf{Data owned/modified:} \texttt{User}, \texttt{Employee}, \texttt{Admin}, \texttt{Premium\_vacation\_days} tables.
+
+\textbf{Public operations:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{getMyProfile()} -- Returns current user data.
+    \item \texttt{changePassword(currentPass, newPass)} -- Validates and updates.
+    \item \texttt{updatePreferences(theme, language)} -- Persists UI preferences.
+    \item \texttt{createUser(dto)} -- Creates User + Employee/Admin atomically.
+    \item \texttt{getUser(userId)} -- Returns user details (visibility-scoped).
+    \item \texttt{updateUser(userId, dto)} -- Partial update with role-based field access.
+    \item \texttt{deactivateEmployee(employeeId)} -- Detaches from department, deletes pending leaves.
+    \item \texttt{deactivateAdmin(adminId)} -- Detaches from all departments.
+\end{itemize}
+
+\textbf{Dependencies:} Department Module, Notification Module, Leave Request Module (for cascading deactivation).
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item User and Employee/Admin must be created in a single atomic operation.
+    \item Active users must have unique email among active users.
+    \item Only Owner can create Admins; Admins can create Employees.
+    \item Owner can only be a User who is Admin for all Departments.
+    \item Users, Employees, and Admins are never hard-deleted (soft deactivation only).
+    \item Deactivating an Employee removes them from their department and deletes pending leave requests.
+    \item Deactivating an Admin detaches them from all departments.
+\end{itemize}
+
+% ── 3.3 Department Management Module ──
+\subsection{Department Management Module}
+
+\textbf{Responsibility:} CRUD for Departments, management of Admin--Department and Employee--Department associations.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{DepartmentController} -- Department CRUD endpoints.
+    \item \texttt{DepartmentService} -- Business logic for department operations.
+    \item \texttt{DepartmentRepository}, \texttt{AdminDepartmentRepository}.
+    \item \texttt{DepartmentValidator} -- Unique name validation, deletion preconditions.
+\end{itemize}
+
+\textbf{Data owned/modified:} \texttt{Department}, \texttt{Admin\_Department} tables.
+
+\textbf{Public operations:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{listDepartments()} -- Returns departments visible to current user.
+    \item \texttt{createDepartment(name)} -- Owner only.
+    \item \texttt{updateDepartment(id, dto)} -- Name (Owner), admin/employee assignments.
+    \item \texttt{deleteDepartment(id)} -- Owner only, requires no employees and no admins.
+\end{itemize}
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Department names must be unique.
+    \item Default Department cannot be deleted.
+    \item Owner can detach Admin only if that Admin oversees more than 2 departments.
+    \item Admin can move Employees only across departments they oversee.
+    \item Admin cannot attach/detach themselves or other Admins.
+\end{itemize}
+
+% ── 3.4 Leave Request Module ──
+\subsection{Leave Request Module}
+
+\textbf{Responsibility:} Full leave request lifecycle: creation, modification, modification requests, approval, rejection, cancellation, deletion. Manages vacation balance updates.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{LeaveController} -- Leave request CRUD and status-change endpoints.
+    \item \texttt{LeaveService} -- Core business logic for leave operations.
+    \item \texttt{LeaveRepository}.
+    \item \texttt{LeaveValidator} -- Date range validation, overlap detection, required-field checks.
+    \item \texttt{VacationBalanceService} -- Calculates and updates vacation balances.
+\end{itemize}
+
+\textbf{Data owned/modified:} \texttt{Leave} table; reads \texttt{Employee}, \texttt{Premium\_vacation\_days}.
+
+\textbf{Public operations:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{listLeaveRequests(filters)} -- Filtered by status, type, department.
+    \item \texttt{createLeaveRequest(dto)} -- Employee self-request or Admin on-behalf.
+    \item \texttt{updateLeaveRequest(id, dto)} -- Field edits and modification requests.
+    \item \texttt{deleteLeaveRequest(id)} -- Hard delete of Pending requests (Employee only).
+    \item \texttt{cancelLeaveRequest(id)} -- Employee cancels own Accepted request.
+    \item \texttt{approveLeaveRequest(id, comment)} -- Admin approves.
+    \item \texttt{rejectLeaveRequest(id, comment)} -- Admin rejects.
+\end{itemize}
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Start date must not be after end date.
+    \item Active leave requests must not overlap with other active requests for the same Employee (unless linked as modification).
+    \item Personal leave type requires a reason.
+    \item Default paid type: Vacation and Sick are paid; Personal is unpaid.
+    \item Employee-created requests start as Pending; if Employee is also Admin, auto-Accepted.
+    \item Admin-created requests are auto-Accepted.
+    \item Only Employee can cancel their own Accepted request.
+    \item Only Employee can hard-delete their own Pending request.
+    \item Modification request to an Accepted leave creates a linked Pending leave.
+    \item Accepted modification overwrites original and self-deletes.
+    \item Rejected modification unlinks and becomes standalone Rejected request.
+    \item Accepting an unpaid leave deletes all logged hours for that Employee in the leave date range.
+    \item Vacation balance is updated upon creation, cancellation, rejection, and date changes of Vacation-type leaves.
+\end{itemize}
+
+% ── 3.5 Logged Hours Module ──
+\subsection{Logged Hours Module}
+
+\textbf{Responsibility:} Creation, editing, and deletion of work hour logs, including overlap/adjacency merge logic.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{LoggedHoursController} -- CRUD endpoints scoped under \texttt{/employees/\{id\}/logged-hours}.
+    \item \texttt{LoggedHoursService} -- Business logic and merge orchestration.
+    \item \texttt{LoggedHoursRepository}.
+    \item \texttt{MergeService} -- Detects and merges overlapping/adjacent logged hour entries.
+\end{itemize}
+
+\textbf{Data owned/modified:} \texttt{Logged\_Hours} table.
+
+\textbf{Public operations:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{listLoggedHours(employeeId, filters)} -- Date-sorted list.
+    \item \texttt{createLoggedHours(employeeId, dto)} -- Admin only; triggers merge.
+    \item \texttt{updateLoggedHours(employeeId, logId, dto)} -- Admin only; triggers merge.
+    \item \texttt{deleteLoggedHours(employeeId, logId)} -- Admin only.
+\end{itemize}
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item End time must be after start time.
+    \item Future dates are not allowed.
+    \item Employees cannot create, modify, or delete logged hours---only Admins can.
+    \item On creation or edit, if the new interval overlaps or is adjacent to existing entries for the same Employee on the same date, all affected entries are merged into a single entry using the earliest start and latest end time.
+\end{itemize}
+
+% ── 3.6 Default Hours Module ──
+\subsection{Default Hours Module}
+
+\textbf{Responsibility:} Manages default weekly hour templates for Departments and Employees. Provides data for the automatic hour logging scheduler.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{DefaultHoursController} -- GET/PUT endpoints for department and employee default hours.
+    \item \texttt{DefaultHoursService} -- Resolves effective default hours (Employee-level overrides Department-level).
+    \item \texttt{DefaultHoursSetRepository}, \texttt{DefaultHoursRepository}.
+\end{itemize}
+
+\textbf{Data owned/modified:} \texttt{Default\_hours\_set}, \texttt{Default\_hours} tables.
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Each day of week can have multiple time intervals.
+    \item End time must be after start time for each interval.
+    \item Days default to N/A (no intervals) until configured.
+    \item If Employee has no personal default hours, they inherit the Department's defaults.
+    \item If Department has no default hours, Employee has no inherited default.
+\end{itemize}
+
+% ── 3.7 Scheduler Module ──
+\subsection{Scheduler Module}
+
+\textbf{Responsibility:} Automatically generates logged hours at midnight for the following day.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{AutoLogScheduler} -- Spring \texttt{@Scheduled} job running at 00:00 daily.
+\end{itemize}
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Creates one \texttt{Logged\_Hours} entry per configured interval for the next day.
+    \item If the day is N/A (no intervals), nothing is created.
+    \item Does not create entries for Employees with approved unpaid leave on that day.
+    \item The \texttt{admin\_id} is set to the System Admin entity.
+\end{itemize}
+
+% ── 3.8 Export Module ──
+\subsection{Export Module}
+
+\textbf{Responsibility:} Generates downloadable CSV data archives.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{ExportController} -- \texttt{GET /api/exports/csv} endpoint.
+    \item \texttt{ExportService} -- Queries and formats data into CSV, archives into ZIP.
+\end{itemize}
+
+\textbf{Business rules:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Only Administrators can export.
+    \item Exports are scoped to the departments the Admin oversees.
+    \item Data may include users, leaves, logged hours, and department information.
+    \item Output format is \texttt{.csv} files archived into a \texttt{.zip}.
+\end{itemize}
+
+% ── 3.9 Notification Module ──
+\subsection{Notification Module}
+
+\textbf{Responsibility:} Sends transactional emails via external SMTP.
+
+\textbf{Internal components:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \texttt{NotificationService} -- Determines which email to send and constructs content.
+    \item \texttt{EmailSender} -- Spring \texttt{JavaMailSender} wrapper.
+\end{itemize}
+
+\textbf{Email triggers:}
+\begin{itemize}[leftmargin=1.5em]
+    \item Account credentials sent to newly registered user.
+    \item Password reset link.
+    \item Password change confirmation.
+    \item Leave request created on behalf of Employee.
+    \item Leave request approved/rejected.
+    \item Leave request modified by Admin.
+    \item User credentials updated by Owner (new password/email).
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Detailed Data Model / Database Design}
+\label{sec:datamodel}
+
+The database schema is implemented in PostgreSQL. The full schema is defined in \texttt{db\_design.txt};
+
+\subsection{Enumerations}
+
+\begin{longtable}{p{3.5cm} p{10cm}}
+\toprule
+\textbf{Enum} & \textbf{Values} \\
+\midrule
+\texttt{theme} & \texttt{DARK}, \texttt{LIGHT} \\
+\texttt{language} & \texttt{ENG}, \texttt{UKR} \\
+\texttt{leave\_type} & \texttt{SICK}, \texttt{VACATION}, \texttt{PERSONAL} \\
+\texttt{leave\_status} & \texttt{PENDING}, \texttt{REJECTED}, \texttt{APPROVED}, \texttt{CANCELED} \\
+\bottomrule
+\end{longtable}
+
+\subsection{Data model}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Data model.png}
+    \caption{Graphical representation of system data mode}
+    \label{fig:data_model}
+\end{figure}
+
+\section{API Design}
+\label{sec:api}
+
+All endpoints are prefixed with \texttt{/api}. Authentication is required for all endpoints except the auth endpoints. The session cookie \texttt{JSESSIONID} is automatically sent by the browser. Responses use JSON format.
+
+\subsection{Authentication}
+\begin{description}
+    \item[\texttt{POST /api/auth/login}] Sign in and create a session.
+    \item[\texttt{POST /api/auth/logout}] Sign out and invalidate the current session.
+    \item[\texttt{POST /api/auth/password/forgot}] Request a password reset email.
+    \item[\texttt{POST /api/auth/password/reset}] Reset password with token.
+\end{description}
+
+\subsection{Users}
+\begin{description}
+    \item[\texttt{GET /api/me}] Get my profile.
+    \item[\texttt{POST /api/me/password}] Change password (logged in).
+    \item[\texttt{PATCH /api/me/preferences}] Update my preferences.
+    \item[\texttt{POST /api/users}] Create a user (\textit{owner only}).
+    \item[\texttt{GET /api/users/\{userId\}}] Get user details.
+    \item[\texttt{PATCH /api/users/\{userId\}}] Update user.
+    \item[\texttt{DELETE /api/users/\{userId\}}] Soft delete user (\textit{owner only}).
+\end{description}
+
+\subsection{Departments}
+\begin{description}
+    \item[\texttt{GET /api/departments}] List departments.
+    \item[\texttt{POST /api/departments}] Create department (\textit{owner only}).
+    \item[\texttt{GET /api/departments/\{departmentId\}}] Get department details.
+    \item[\texttt{PATCH /api/departments/\{departmentId\}}] Update department.
+    \item[\texttt{DELETE /api/departments/\{departmentId\}}] Delete department (\textit{owner only}).
+    \item[\texttt{GET /api/departments/\{departmentId\}/default-hours}] Get department default week hours.
+    \item[\texttt{PUT /api/departments/\{departmentId\}/default-hours}] Set department default week hours.
+\end{description}
+
+\subsection{Employees}
+\begin{description}
+    \item[\texttt{GET /api/employees}] List employees.
+    \item[\texttt{GET /api/employees/\{employeeId\}/default-hours}] Get employee default week hours.
+    \item[\texttt{PUT /api/employees/\{employeeId\}/default-hours}] Set employee default week hours.
+\end{description}
+
+\subsection{Leave Requests}
+\begin{description}
+    \item[\texttt{GET /api/leave-requests}] List leave requests.
+    \item[\texttt{POST /api/leave-requests}] Create leave request.
+    \item[\texttt{GET /api/leave-requests/\{leaveRequestId\}}] Get leave request details.
+    \item[\texttt{PATCH /api/leave-requests/\{leaveRequestId\}}] Update a leave request.
+    \item[\texttt{DELETE /api/leave-requests/\{leaveRequestId\}}] Delete PENDING leave request (\textit{employee only}).
+    \item[\texttt{POST /api/leave-requests/\{leaveRequestId\}/cancel}] Cancel a leave request (\textit{employee only}).
+    \item[\texttt{POST /api/leave-requests/\{leaveRequestId\}/approve}] Approve a leave request.
+    \item[\texttt{POST /api/leave-requests/\{leaveRequestId\}/reject}] Reject a leave request.
+\end{description}
+
+\subsection{Logged Hours}
+\begin{description}
+    \item[\texttt{GET /api/employees/\{employeeId\}/logged-hours}] List logged work hours.
+    \item[\texttt{POST /api/employees/\{employeeId\}/logged-hours}] Create logged hours (\textit{admin only}).
+    \item[\texttt{PATCH /api/employees/\{employeeId\}/logged-hours/\{loggedHoursId\}}] Update logged hours (\textit{admin only}).
+    \item[\texttt{DELETE /api/employees/\{employeeId\}/logged-hours/\{loggedHoursId\}}] Delete logged hours (\textit{admin only}).
+\end{description}
+
+\subsection{Exports}
+\begin{description}
+    \item[\texttt{GET /api/exports/csv}] Export CSV data.
+\end{description}
+
+% ══════════════════════════════════════════════════════════════
+\section{User Interface Design}
+\label{sec:ui}
+
+The UI is designed in Figma. This section describes the main screens, their purpose, user actions, and the API endpoints they consume. Full visual mockups are available in the linked \href{https://www.figma.com/design/gXW9SjcVd3WYGhZkZgdiW4/CRM-Dashboard-Customers-List--Community-?node-id=0-1&t=B8TP7vt4psiaqP2p-1}{Figma project}
+
+% ══════════════════════════════════════════════════════════════
+\section{Detailed Sequence and Activity Diagrams}
+\label{sec:flows}
+
+\subsection{Flow 1: User Login}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{flow1.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Flow 2: Employee Creates Leave Request}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{flow2.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Flow 3: Admin Approves / Rejects Leave Request}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{flow3.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Flow 4: Logged Hours Creation with Merge}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{flow4.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\subsection{Flow 5: Leave Request State Diagram}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{flow6.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\newpage
+
+\subsection{Flow 6: Automatic Hour Logging (Scheduler)}
+
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\linewidth,height=0.85\textheight,keepaspectratio]{diagram5.png}
+    \label{fig:placeholder}
+\end{figure}
+
+\newpage
+% ══════════════════════════════════════════════════════════════
+\section{Business Logic and Validation Rules}
+\label{sec:logic}
+
+The full detailed rules are defined in \texttt{business\_logic.md};
+
+% ══════════════════════════════════════════════════════════════
+\section{Security Design}
+\label{sec:security}
+
+\subsection{Authentication}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Method:} HTTP session-based authentication using Spring Security.
+    \item \textbf{Session identifier:} \texttt{JSESSIONID} cookie.
+    \item \textbf{Password storage:} Bcrypt hash. Plaintext passwords are never stored.
+    \item \textbf{Session lifecycle:}
+    \begin{itemize}
+        \item Created upon successful \texttt{POST /api/auth/login}.
+        \item Invalidated upon \texttt{POST /api/auth/logout}.
+        \item All sessions invalidated upon password change.
+        \item Server-side session timeout configurable (default: 30 minutes of inactivity).
+    \end{itemize}
+    \item \textbf{Password reset:}
+    \begin{itemize}
+        \item Token-based via email; token expires after 15 minutes.
+        \item New reset request invalidates previous token.
+        \item After reset, all existing sessions are invalidated.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Authorization and Roles}
+
+The system has three roles with hierarchical permissions:
+
+\begin{longtable}{p{2.5cm} p{11cm}}
+\toprule
+\textbf{Role} & \textbf{Permissions} \\
+\midrule
+\textbf{Employee} &
+    View own profile, leave requests, and logged hours.
+    Create and manage own leave requests (create, edit pending, cancel accepted, delete pending).
+    Change own password.
+    Update UI preferences (theme, language). \\
+\midrule
+\textbf{Admin} &
+    All Employee permissions for themselves.
+    View Employees and their data in overseen Departments.
+    Create Employee accounts in overseen Departments.
+    Create, edit, approve, reject leave requests for overseen Employees.
+    Create, edit, delete logged hours for overseen Employees.
+    Manage default hours for overseen Departments and their Employees.
+    Move Employees across overseen Departments.
+    Export CSV data for overseen Departments.
+    Manage Premium Vacation Days for overseen Employees. \\
+\midrule
+\textbf{Owner} &
+    All Admin permissions across all Departments.
+    Create Admin accounts.
+    Create, modify, delete Departments.
+    Attach/detach Admins to/from Departments.
+    Modify all User/Employee/Admin fields.
+    Deactivate Employees and Admins.
+    View all Admins and Users. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Access Control Implementation}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item Every protected endpoint requires a valid \texttt{JSESSIONID}.
+    \item Unauthenticated requests to protected endpoints receive \texttt{401 Unauthorized}.
+    \item The backend resolves the current user from the session and checks role + department oversight before processing any request.
+    \item Resource ownership is validated server-side: an Admin can only access data for Employees in Departments they oversee. Violations return \texttt{403 Forbidden}.
+    \item The frontend hides UI elements based on role, but this is a UX convenience only---the backend enforces all rules independently.
+\end{itemize}
+
+\subsection{Input Validation and Protection}
+
+\begin{itemize}[leftmargin=1.5em]
+    \item All input is validated on both frontend (immediate feedback) and backend (authoritative).
+    \item Email format validated using standard regex patterns.
+    \item Date/time fields validated for logical consistency (start before end, no future dates for logged hours).
+    \item SQL injection prevented by using JPA/Hibernate parameterized queries.
+    \item XSS mitigated by React's default escaping and backend input sanitization.
+    \item CSRF protection via Spring Security's built-in CSRF token mechanism (synchronizer token pattern), coordinated with the session cookie.
+    \item Login error messages are generic (``Invalid credentials'') to prevent email enumeration.
+    \item Password reset always returns 200 OK regardless of whether the email exists.
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\section{Error Handling and Edge Cases}
+\label{sec:errors}
+
+\subsection{Error Response Format}
+
+All error responses follow a consistent JSON structure:
+
+\begin{lstlisting}[style=json]
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Start date must not be after end date.",
+  "timestamp": "2026-05-12T10:30:00Z",
+  "path": "/api/leave-requests"
+}
+\end{lstlisting}
+
+For validation errors with multiple fields:
+
+\begin{lstlisting}[style=json]
+{
+  "fieldErrors": {
+    "email": "Email format is invalid.",
+    "yearlyVacationBalance": "Must be greater than or equal to 0."
+  }
+}
+\end{lstlisting}
+
+\subsection{Error Catalog}
+
+\begin{longtable}{p{5.5cm} p{2cm} p{6cm}}
+\toprule
+\textbf{Situation} & \textbf{HTTP Code} & \textbf{System Behavior} \\
+\midrule
+\multicolumn{3}{l}{\textit{Authentication Errors}} \\
+\midrule
+Invalid email or password & 401 & Generic ``Invalid credentials'' message. No hint about which field is wrong. \\
+Session expired or missing & 401 & ``Session expired. Please log in again.'' Frontend redirects to login. \\
+Password reset token invalid & 400 & ``Invalid reset token.'' \\
+Incorrect current password (change) & 400 & ``Current password is incorrect.'' \\
+\midrule
+\multicolumn{3}{l}{\textit{Authorization Errors}} \\
+\midrule
+User accesses resource outside their role & 403 & ``You do not have permission to perform this action.'' \\
+Admin accesses Employee not in their department & 403 & ``Access denied: Employee is not in your department.'' \\
+Employee tries to create/edit/delete logged hours & 403 & ``Only administrators can manage logged hours.'' \\
+Non-owner tries to create Admin & 403 & ``Only the Owner can create administrator accounts.'' \\
+Non-owner tries to delete department & 403 & ``Only the Owner can delete departments.'' \\
+\midrule
+\multicolumn{3}{l}{\textit{Validation Errors}} \\
+\midrule
+Required field missing & 400 & Field-specific error message (e.g., ``Reason is required for Personal leave type.''). \\
+Email not unique among active users & 400 & ``A user with this email already exists.'' \\
+Email format invalid & 400 & ``Email format is invalid.'' \\
+Start date after end date & 400 & ``Start date must not be after end date.'' \\
+Leave request date overlap & 409 & ``Leave request dates overlap with an existing active request.'' \\
+End time before start time (hours) & 400 & ``End time must be after start time.'' \\
+Future date for logged hours & 400 & ``Cannot log hours for future dates.'' \\
+Department name duplicate & 409 & ``A department with this name already exists.'' \\
+\midrule
+\multicolumn{3}{l}{\textit{Business Rule Violations}} \\
+\midrule
+Delete non-pending leave request & 400 & ``Only pending requests can be deleted.'' \\
+Cancel non-accepted leave request & 400 & ``Only accepted requests can be cancelled.'' \\
+Edit rejected/cancelled leave & 400 & ``Cannot modify a rejected or cancelled request.'' \\
+Edit active leave with pending modification & 400 & ``Cannot edit a leave request with a pending modification.'' \\
+Modify leave without changing fields & 400 & ``At least one field must be changed.'' \\
+Delete Default Department & 400 & ``The Default Department cannot be deleted.'' \\
+Delete department with employees/admins & 409 & ``Cannot delete department with assigned employees or admins.'' \\
+Detach Admin overseeing $\leq$ 2 departments & 400 & ``Cannot detach Admin who oversees fewer than 3 departments.'' \\
+Deactivate Employee as non-owner & 403 & ``Only the Owner can deactivate employees.'' \\
+\midrule
+\multicolumn{3}{l}{\textit{Resource Not Found}} \\
+\midrule
+User/Employee/Leave/etc. not found & 404 & ``Resource not found.'' \\
+\midrule
+\multicolumn{3}{l}{\textit{External Service Errors}} \\
+\midrule
+SMTP service unavailable & 500 & Operation proceeds; email delivery is logged as failed. Frontend shows success for the primary action with a note that notification may be delayed. \\
+Database connection failure & 500 & ``Internal server error. Please try again later.'' Error logged server-side. \\
+\bottomrule
+\end{longtable}
+
+\textit{Note: This catalog covers the primary error cases derived from the business logic specification. Additional error cases may be identified during implementation and should follow the same response format and patterns.}
+
+% ══════════════════════════════════════════════════════════════
+\section{Deployment and Runtime View}
+\label{sec:deployment}
+
+\subsection{Overview}
+
+The EmpPulse application is deployed on a single server using Docker Compose to orchestrate two containers: one for the Java (Spring Boot) application and one for PostgreSQL. The React frontend is built into static assets and served by the Spring Boot application (or optionally by a reverse proxy). External connectivity is provided over HTTPS on port 443.
+
+\subsection{Deployment Architecture}
+
+The deployment architecture is shown in the attached diagram (Figure~\ref{fig:deployment}) and described below:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Server:} A single Linux server hosts the entire application stack.
+    \item \textbf{Docker Compose:} Orchestrates the container environment.
+    \item \textbf{Java Container:} Runs the Spring Boot application (backend + static frontend assets). Exposes port 443 (HTTPS) to the Internet. Connects to PostgreSQL via JDBC on the internal Docker network (port 5432).
+    \item \textbf{PostgreSQL Container:} Runs PostgreSQL database. Not exposed to the Internet; accessible only from the Java container on the internal Docker network.
+    \item \textbf{DB Volume:} A Docker named volume mounted to the PostgreSQL container ensures data persistence across container restarts and redeployments.
+    \item \textbf{External SMTP:} The Java container connects outbound to an external SMTP server for sending transactional emails.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\linewidth]{deployment_diagram.png}
+    \caption{Deployment Diagram}
+    \label{fig:deployment_diagram}
+\end{figure}
+
+\subsection{Environment Configuration}
+
+Configuration is provided through environment variables, injected via Docker Compose \texttt{.env} file or environment section:
+
+\begin{longtable}{p{5.5cm} p{8cm}}
+\toprule
+\textbf{Variable} & \textbf{Purpose} \\
+\midrule
+\texttt{DB\_HOST} & PostgreSQL hostname (default: \texttt{postgres}). \\
+\texttt{DB\_PORT} & PostgreSQL port (default: \texttt{5432}). \\
+\texttt{DB\_NAME} & Database name (e.g., \texttt{emppulse}). \\
+\texttt{DB\_USER} & Database username. \\
+\texttt{DB\_PASSWORD} & Database password. \\
+\texttt{SMTP\_HOST} & SMTP server hostname. \\
+\texttt{SMTP\_PORT} & SMTP server port. \\
+\texttt{SMTP\_USER} & SMTP authentication username. \\
+\texttt{SMTP\_PASSWORD} & SMTP authentication password. \\
+\texttt{APP\_BASE\_URL} & Public URL of the application (for email links). \\
+\texttt{SESSION\_TIMEOUT} & HTTP session timeout (default: 30m). \\
+\bottomrule
+\end{longtable}
+
+\subsection{Technology Stack}
+
+\begin{longtable}{p{3.5cm} p{10cm}}
+\toprule
+\textbf{Component} & \textbf{Technology} \\
+\midrule
+Frontend & React (Vite build tooling), served as static assets. \\
+Backend & Java, Spring Boot (Spring MVC, Spring Security, Spring Data JPA, Spring Mail, Spring Scheduler). \\
+Database & PostgreSQL (latest stable), running in Docker. \\
+ORM & Hibernate / Spring Data JPA. \\
+Authentication & Spring Security with HTTP session (JSESSIONID). \\
+Email & Spring Mail (\texttt{JavaMailSender}) with external SMTP. \\
+Containerization & Docker, Docker Compose. \\
+Build & Maven (backend), npm/Vite (frontend). \\
+\bottomrule
+\end{longtable}
+
+
+\end{document}

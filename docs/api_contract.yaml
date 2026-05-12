@@ -1,0 +1,1716 @@
+openapi: 3.0.0
+info:
+  title: EmpPulse API
+  version: 1.0.0
+  description: REST API for EmpPulse employee leave, department, and time tracking.
+servers:
+   - url: http://localhost:8080
+     description: Local
+
+security:
+  - CookieAuth: []
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Departments
+  - name: Employees
+  - name: Admins
+  - name: LeaveRequests
+  - name: LoggedHours
+  - name: DefaultHours
+  - name: Exports
+  - name: Preferences
+
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Sign in and create a session
+      description: Authenticate with email and password and receive a JSESSIONID cookie.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: Sign out and invalidate the current session
+      responses:
+        '200':
+          description: Session invalidated
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Logout successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/password/forgot:
+    post:
+      tags:
+        - Auth
+      summary: Request a password reset email
+      description: Sends a password reset email if the address exists.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordForgotRequest'
+      responses:
+        '204':
+          description: Reset email queued
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/password/reset:
+    post:
+      tags:
+        - Auth
+      summary: Reset password with token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '204':
+          description: Password reset
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/me:
+    get:
+      tags:
+        - Users
+      summary: Get my profile
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/me/password:
+    post:
+      tags:
+        - Users
+      summary: Change password (logged in)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+      responses:
+        '204':
+          description: Password changed and other sessions invalidated
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/me/preferences:
+    patch:
+      tags:
+        - Preferences
+      summary: Update my preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferencesUpdate'
+      responses:
+        '200':
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPreferences'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users:
+    post:
+      tags:
+        - Users
+      summary: Create a user
+      description: >
+        Creates a user. Admins can only create users as employees.
+        Owner can additionally create users as administrators.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '204':
+          description: User created
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: Get user details (to see user profile)
+      description: Owner can view all users. Admins can view employees who they oversee.
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - Users
+      summary: Update user (edit profile)
+      description: Owner can update all fields. Admins can update employees department and premium vacation days.
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '204':
+          description: Updated user
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Users
+      summary: Soft delete user (owner only)
+      description: Marks user as deleted; pending leave requests are hard deleted.
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: User deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/departments:
+    get:
+      tags:
+        - Departments
+      responses:
+        '200':
+          description: Departments list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Departments
+      summary: Create department (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentCreate'
+      responses:
+        '204':
+          description: Department created
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/departments/{departmentId}:
+    get:
+      tags:
+        - Departments
+      summary: Get department details
+      parameters:
+        - in: path
+          name: departmentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Department details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - Departments
+      summary: Update department
+      description: Owner can rename and assign admins. Admins can update default hours.
+      parameters:
+        - in: path
+          name: departmentId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentUpdate'
+      responses:
+        '204':
+          description: Updated department
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Departments
+      summary: Delete department (owner only)
+      description: Only possible if no Employees/Administrators are assigned to given Department.
+      parameters:
+        - in: path
+          name: departmentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Department deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/departments/{departmentId}/default-hours:
+    get:
+      tags:
+        - DefaultHours
+      summary: Get department default week hours
+      parameters:
+        - in: path
+          name: departmentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Default week hours
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultWeekHours'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - DefaultHours
+      summary: Set department default week hours
+      parameters:
+        - in: path
+          name: departmentId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefaultWeekHours'
+      responses:
+        '200':
+          description: Default week hours saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultWeekHours'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/employees:
+    get:
+      tags:
+        - Employees
+      summary: List employees
+      description: Default sort is by surname ascending.
+      parameters:
+        - in: query
+          name: departmentIds
+          schema:
+            type: array
+            items:
+              type: integer
+      responses:
+        '200':
+          description: Employees list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/employees/{employeeId}/default-hours:
+    get:
+      tags:
+        - DefaultHours
+      summary: Get employee default week hours
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Default week hours
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultWeekHours'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - DefaultHours
+      summary: Set employee default week hours
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DefaultWeekHours'
+      responses:
+        '200':
+          description: Default week hours saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultWeekHours'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/employees/{employeeId}/logged-hours:
+    get:
+      tags:
+        - LoggedHours
+      summary: List logged work hours
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: departmentId
+          schema:
+            type: integer
+        - in: query
+          name: fromDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: toDate
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Logged hours list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoggedHoursListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - LoggedHours
+      summary: Create logged hours (admin only)
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoggedHoursCreate'
+      responses:
+        '201':
+          description: Logged hours created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoggedHours'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/employees/{employeeId}/logged-hours/{loggedHoursId}:
+    patch:
+      tags:
+        - LoggedHours
+      summary: Update logged hours (admin only)
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: loggedHoursId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoggedHoursUpdate'
+      responses:
+        '200':
+          description: Logged hours updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoggedHours'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - LoggedHours
+      summary: Delete logged hours (admin only)
+      parameters:
+        - in: path
+          name: employeeId
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: loggedHoursId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Logged hours deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/leave-requests:
+    get:
+      tags:
+        - LeaveRequests
+      summary: List leave requests
+      description: >
+        Returns leave requests. 
+        - Owners see all requests. 
+        - Admins see only requests from departments they manage. 
+        - Workers see only their own requests.
+      responses:
+        '200':
+          description: Leave requests list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - LeaveRequests
+      summary: Create leave request
+      description: Employees create their own requests. Admins can create on behalf of employees.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestCreate'
+      responses:
+        '201':
+          description: Leave request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/leave-requests/{leaveRequestId}:
+    get:
+      tags:
+        - LeaveRequests
+      summary: Get leave request details
+      parameters:
+        - in: path
+          name: leaveRequestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Leave request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - LeaveRequests
+      summary: Update a leave request
+      description: >
+        Updates an existing leave request. 
+        For employees, this can be used to edit a PENDING request. 
+        For admins, this updates the request in-place.
+      parameters:
+        - in: path
+          name: leaveRequestId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestUpdate'
+      responses:
+        '200':
+          description: Updated leave request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - LeaveRequests
+      summary: Delete PENDING leave request (employee only)
+      parameters:
+        - in: path
+          name: leaveRequestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Leave request deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/leave-requests/{leaveRequestId}/cancel:
+    post:
+      tags:
+        - LeaveRequests
+      summary: Cancel a leave request (employee only)
+      parameters:
+        - in: path
+          name: leaveRequestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Leave request canceled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/leave-requests/{leaveRequestId}/approve:
+    post:
+      tags:
+        - LeaveRequests
+      summary: Approve a leave request
+      parameters:
+        - in: path
+          name: leaveRequestId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestAction'
+      responses:
+        '200':
+          description: Leave request approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/leave-requests/{leaveRequestId}/reject:
+    post:
+      tags:
+        - LeaveRequests
+      summary: Reject a leave request
+      parameters:
+        - in: path
+          name: leaveRequestId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestAction'
+      responses:
+        '200':
+          description: Leave request rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/exports/csv:
+    get:
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+          nullable: true
+
+    SortOrder:
+      type: string
+      enum:
+        - asc
+        - desc
+
+    Theme:
+      type: string
+      enum:
+        - DARK
+        - LIGHT
+
+    Language:
+      type: string
+      enum:
+        - ENG
+        - UKR
+
+    UserRole:
+      type: string
+      enum:
+        - OWNER
+        - ADMIN
+        - WORKER
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    PasswordForgotRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - token
+        - newPassword
+        - confirmNewPassword
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          format: password
+        confirmNewPassword:
+          type: string
+          format: password
+
+    PasswordChangeRequest:
+      type: object
+      required:
+        - currentPassword
+        - newPassword
+        - confirmNewPassword
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+        confirmNewPassword:
+          type: string
+          format: password
+
+    UserPreferences:
+      type: object
+      required:
+        - theme
+        - language
+      properties:
+        theme:
+          $ref: '#/components/schemas/Theme'
+        language:
+          $ref: '#/components/schemas/Language'
+
+    UserPreferencesUpdate:
+      type: object
+      properties:
+        theme:
+          $ref: '#/components/schemas/Theme'
+        language:
+          $ref: '#/components/schemas/Language'
+
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - surname
+        - email
+        - isOwner
+        - preferences
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+          format: email
+        isOwner:
+          type: boolean
+        preferences:
+          $ref: '#/components/schemas/UserPreferences'
+        employeeProfile:
+          $ref: '#/components/schemas/EmployeeProfile'
+        adminProfile:
+          $ref: '#/components/schemas/AdminProfile'
+
+    UserSummary:
+      type: object
+      required:
+        - id
+        - name
+        - surname
+        - email
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+          format: email
+
+    UserCreate:
+      type: object
+      required:
+        - name
+        - surname
+        - email
+        - password
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        employeeDepartmentId:
+          type: integer
+          nullable: true
+        yearlyVacationBalance:
+          type: integer
+          minimum: 0
+        premiumVacationDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/PremiumVacationDay'
+        employeeActive:
+          type: boolean
+        adminDepartmentIds:
+          type: array
+          items:
+            type: integer
+        adminActive:
+          type: boolean
+      description: >
+        To create a worker, provide yearlyVacationBalance and employeeDepartmentId.
+        To create an admin, provide adminDepartmentIds. A user can be both admin and employee in the same department.
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        preferences:
+          $ref: '#/components/schemas/UserPreferencesUpdate'
+        employeeDepartmentId:
+          type: integer
+          nullable: true
+        yearlyVacationBalance:
+          type: integer
+          minimum: 0
+        premiumVacationDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/PremiumVacationDay'
+        employeeActive:
+          type: boolean
+        adminDepartmentIds:
+          type: array
+          items:
+            type: integer
+        adminActive:
+          type: boolean
+
+    UserListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSummary'
+
+    MeResponse:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+
+    AdminProfile:
+      type: object
+      required:
+        - adminId
+        - departmentIds
+        - active
+      properties:
+        adminId:
+          type: integer
+        departmentIds:
+          type: array
+          items:
+            type: integer
+        active:
+          type: boolean
+
+    PremiumVacationDay:
+      type: object
+      required:
+        - year
+        - days
+      properties:
+        year:
+          type: integer
+        days:
+          type: integer
+          minimum: 0
+
+    EmployeeProfile:
+      type: object
+      required:
+        - employeeId
+        - yearlyVacationBalance
+        - active
+      properties:
+        employeeId:
+          type: integer
+        departmentId:
+          type: integer
+          nullable: true
+        departmentName:
+          type: string
+          nullable: true
+        yearlyVacationBalance:
+          type: integer
+          minimum: 0
+        premiumVacationDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/PremiumVacationDay'
+        active:
+          type: boolean
+
+    AdminSummary:
+      type: object
+      required:
+        - id
+        - user
+        - active
+      properties:
+        id:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        departmentIds:
+          type: array
+          items:
+            type: integer
+        active:
+          type: boolean
+
+    AdminListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSummary'
+
+    Department:
+      type: object
+      required:
+        - id
+        - name
+        - admins
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        admins:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminSummary'
+        defaultWeekHours:
+          $ref: '#/components/schemas/DefaultWeekHours'
+
+    DepartmentCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        adminIds:
+          type: array
+          items:
+            type: integer
+        defaultWeekHours:
+          $ref: '#/components/schemas/DefaultWeekHours'
+
+    DepartmentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        adminIds:
+          type: array
+          items:
+            type: integer
+        defaultWeekHours:
+          $ref: '#/components/schemas/DefaultWeekHours'
+
+    DepartmentListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Department'
+
+    Employee:
+      type: object
+      required:
+        - id
+        - user
+        - yearlyVacationBalance
+        - active
+      properties:
+        id:
+          type: integer
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        departmentId:
+          type: integer
+          nullable: true
+        departmentName:
+          type: string
+          nullable: true
+        yearlyVacationBalance:
+          type: integer
+          minimum: 0
+        premiumVacationDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/PremiumVacationDay'
+        active:
+          type: boolean
+
+    EmployeeSummary:
+      type: object
+      required:
+        - id
+        - name
+        - surname
+        - active
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        surname:
+          type: string
+        departmentId:
+          type: integer
+          nullable: true
+        departmentName:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+
+    EmployeeCreate:
+      type: object
+      required:
+        - name
+        - surname
+        - email
+        - password
+        - yearlyVacationBalance
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        departmentId:
+          type: integer
+          nullable: true
+        yearlyVacationBalance:
+          type: integer
+          minimum: 0
+        premiumVacationDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/PremiumVacationDay'
+        active:
+          type: boolean
+
+    EmployeeUpdate:
+      type: object
+      properties:
+        departmentId:
+          type: integer
+          nullable: true
+        yearlyVacationBalance:
+          type: integer
+          minimum: 0
+        premiumVacationDays:
+          type: array
+          items:
+            $ref: '#/components/schemas/PremiumVacationDay'
+        active:
+          type: boolean
+
+    EmployeeListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmployeeSummary'
+
+    LeaveType:
+      type: string
+      enum:
+        - SICK
+        - VACATION
+        - PERSONAL
+
+    LeaveStatus:
+      type: string
+      enum:
+        - PENDING
+        - REJECTED
+        - APPROVED
+        - CANCELED
+
+    LeaveRequest:
+      type: object
+      required:
+        - id
+        - employee
+        - type
+        - paid
+        - startDate
+        - endDate
+        - status
+        - creationTime
+        - editTime
+      properties:
+        id:
+          type: integer
+        employee:
+          $ref: '#/components/schemas/EmployeeSummary'
+        departmentId:
+          type: integer
+        type:
+          $ref: '#/components/schemas/LeaveType'
+        paid:
+          type: boolean
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/LeaveStatus'
+        adminReviewerId:
+          type: integer
+          nullable: true
+        adminComment:
+          type: string
+          nullable: true
+        creationTime:
+          type: string
+          format: date-time
+        editTime:
+          type: string
+          format: date-time
+
+    LeaveRequestCreate:
+      type: object
+      required:
+        - type
+        - paid
+        - startDate
+        - endDate
+      properties:
+        employeeId:
+          type: integer
+          nullable: true
+        type:
+          $ref: '#/components/schemas/LeaveType'
+        paid:
+          type: boolean
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          nullable: true
+      description: >
+        reason is required when type=PERSONAL. employeeId is required when an admin
+        creates a request on behalf of an employee.
+
+    LeaveRequestUpdate:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/LeaveType'
+        paid:
+          type: boolean
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        reason:
+          type: string
+          nullable: true
+        adminComment:
+          type: string
+          nullable: true
+
+    LeaveRequestAction:
+      type: object
+      properties:
+        adminComment:
+          type: string
+          nullable: true
+
+    LeaveRequestListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaveRequest'
+
+    LoggedHours:
+      type: object
+      required:
+        - id
+        - employeeId
+        - adminId
+        - date
+        - startTime
+        - endTime
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        adminId:
+          type: integer
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    LoggedHoursCreate:
+      type: object
+      required:
+        - employeeId
+        - date
+        - startTime
+        - endTime
+      properties:
+        employeeId:
+          type: integer
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    LoggedHoursUpdate:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    LoggedHoursListResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoggedHours'
+
+    DefaultWeekHours:
+      type: object
+      required:
+        - days
+      properties:
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/DefaultWeekHoursDay'
+      description: dayOfWeek uses 0=Monday through 6=Sunday.
+
+    DefaultWeekHoursDay:
+      type: object
+      required:
+        - dayOfWeek
+        - intervals
+      properties:
+        dayOfWeek:
+          type: integer
+          minimum: 0
+          maximum: 6
+        intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeInterval'
+
+    TimeInterval:
+      type: object
+      required:
+        - startTime
+        - endTime
+      properties:
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
