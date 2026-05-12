@@ -40,4 +40,5 @@ frontend/.env
 
 docker-data/
 
+### macOS ###
 .DS_Store
