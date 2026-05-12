@@ -1,6 +1,7 @@
 // src/components/screens/DepartmentsScreen.tsx
 import React, { useState } from 'react';
 import type { ModalType, Department } from '../types';
+import trashIcon from '../assets/trash-icon.png.webp';
 
 interface Props { 
   openModal: (modal: ModalType, dept?: Department) => void; 
@@ -102,7 +103,7 @@ const DepartmentsScreen: React.FC<Props> = ({ openModal, onSelectDepartment }) =
               }}
               title="Delete Department"
             >
-              <img src="/src/assets/trash-icon.png.webp" alt="Delete" width={30} height={30} />
+              <img src={trashIcon} alt="Delete" width={30} height={30} />
             </button>
           </div>
         ))}

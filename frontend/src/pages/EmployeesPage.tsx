@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
+import trashIcon from '../assets/trash-icon.png.webp';
 import { DEPARTMENT_EMPLOYEES, UNASSIGNED_EMPLOYEES } from '../utils/mockData';
 
 interface Props {
@@ -46,7 +47,7 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
                     onClick={(e) => { e.stopPropagation(); openModal('DELETE_EMPLOYEE', emp); }}
                     title="Remove from department"
                   >
-                    <img src="/src/assets/trash-icon.png.webp" alt="Delete" width={30} height={30} />
+                    <img src={trashIcon} alt="Delete" width={30} height={30} />
                   </button>
                 </div>
               </div>
