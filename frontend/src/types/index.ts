@@ -36,9 +36,28 @@ export interface LeaveRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   reason?: string;
 }
+// --- Auth / Current User ---
+export type UserRole = 'OWNER' | 'ADMIN' | 'WORKER';
+
+export interface MeUser {
+  id: number;
+  name: string;
+  surname: string;
+  email: string;
+  owner: boolean;
+  preferences: { theme: string; language: string };
+  employeeProfile: { id: number; departmentId: number | null; departmentName: string | null; vacationBalance: number } | null;
+  adminProfile: { id: number; departmentIds: number[] } | null;
+}
+
+export function deriveRole(user: MeUser): UserRole {
+  if (user.owner) return 'OWNER';
+  if (user.adminProfile !== null) return 'ADMIN';
+  return 'WORKER';
+}
 
 // --- App State Types ---
-export type ScreenType = 
+export type ScreenType =
   | 'login' 
   | 'employees' 
   | 'request-manager' 

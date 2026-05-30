@@ -1,43 +1,63 @@
 import React from 'react';
-import type { ScreenType } from '../types';
+import type { ScreenType, MeUser } from '../types';
+import { deriveRole } from '../types';
 
 interface Props {
   currentScreen: ScreenType;
   setScreen: (screen: ScreenType) => void;
+  currentUser: MeUser | null;
 }
 
-const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
+const Sidebar: React.FC<Props> = ({ currentScreen, setScreen, currentUser }) => {
+  const role = currentUser ? deriveRole(currentUser) : null;
+
+  const showEmployees     = role === 'OWNER' || role === 'ADMIN';
+  const showRequestMgr    = role === 'OWNER' || role === 'ADMIN';
+  const showDepartments   = role === 'OWNER' || role === 'ADMIN';
+  const showMyRequests    = role === 'ADMIN' || role === 'WORKER';
+
+  const displayName = currentUser ? `${currentUser.name} ${currentUser.surname}` : '';
+  const displayRole = role === 'OWNER' ? 'Owner' : role === 'ADMIN' ? 'Administrator' : 'Employee';
+
   return (
     <aside className="sidebar">
       <div className="sidebar-top">
-        <h1 className="brand-logo" onClick={() => setScreen('employees')} style={{ cursor: 'pointer' }}>
+        <h1 className="brand-logo" onClick={() => setScreen(role === 'WORKER' ? 'my-requests' : 'employees')} style={{ cursor: 'pointer' }}>
           EmpPulse
         </h1>
         <nav className="sidebar-nav">
-          <button
-            className={`nav-item ${currentScreen === 'employees' ? 'active' : ''}`}
-            onClick={() => setScreen('employees')}
-          >
-            Employees
-          </button>
-          <button
-            className={`nav-item ${currentScreen === 'request-manager' ? 'active' : ''}`}
-            onClick={() => setScreen('request-manager')}
-          >
-            Request manager
-          </button>
-          <button
-            className={`nav-item ${currentScreen === 'my-requests' ? 'active' : ''}`}
-            onClick={() => setScreen('my-requests')}
-          >
-            My requests
-          </button>
-          <button
-            className={`nav-item ${currentScreen === 'departments' ? 'active' : ''}`}
-            onClick={() => setScreen('departments')}
-          >
-            Department list
-          </button>
+          {showEmployees && (
+            <button
+              className={`nav-item ${currentScreen === 'employees' ? 'active' : ''}`}
+              onClick={() => setScreen('employees')}
+            >
+              Employees
+            </button>
+          )}
+          {showRequestMgr && (
+            <button
+              className={`nav-item ${currentScreen === 'request-manager' ? 'active' : ''}`}
+              onClick={() => setScreen('request-manager')}
+            >
+              Request manager
+            </button>
+          )}
+          {showMyRequests && (
+            <button
+              className={`nav-item ${currentScreen === 'my-requests' ? 'active' : ''}`}
+              onClick={() => setScreen('my-requests')}
+            >
+              My requests
+            </button>
+          )}
+          {showDepartments && (
+            <button
+              className={`nav-item ${currentScreen === 'departments' ? 'active' : ''}`}
+              onClick={() => setScreen('departments')}
+            >
+              Department list
+            </button>
+          )}
         </nav>
       </div>
 
@@ -45,8 +65,8 @@ const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
         <div className="user-profile" onClick={() => setScreen('my-profile')} style={{ cursor: 'pointer' }}>
           <div className="user-avatar"></div>
           <div className="user-info">
-            <span className="user-name">Mikita Sirosh</span>
-            <span className="user-role">Administrator</span>
+            <span className="user-name">{displayName}</span>
+            <span className="user-role">{displayRole}</span>
           </div>
         </div>
 

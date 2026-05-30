@@ -1,5 +1,25 @@
-// Placeholder for API service layer.
-// Replace with real HTTP calls (e.g. fetch/axios) when backend is connected.
+import type { MeUser } from '../types';
+
+export const authService = {
+  login: async (email: string, password: string): Promise<MeUser> => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message ?? 'Invalid credentials');
+    }
+    const data = await res.json();
+    return data.user as MeUser;
+  },
+
+  logout: async (): Promise<void> => {
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  },
+};
 
 export const employeeService = {
   getAll: async () => { throw new Error('Not implemented'); },

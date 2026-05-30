@@ -55,3 +55,6 @@ logs/
 
 ### macOS ###
 .DS_Store
+
+### GitHub Copilot auto-generated ###
+.github/modernize/
