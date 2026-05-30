@@ -58,13 +58,14 @@ export function deriveRole(user: MeUser): UserRole {
 
 // --- App State Types ---
 export type ScreenType =
-  | 'login' 
-  | 'employees' 
-  | 'request-manager' 
-  | 'my-requests' 
-  | 'departments' 
+  | 'login'
+  | 'forbidden'
+  | 'employees'
+  | 'request-manager'
+  | 'my-requests'
+  | 'departments'
   | 'department-detail'
-  | 'my-profile' 
+  | 'my-profile'
   | 'employee-profile';
 
 export type ModalType = 
