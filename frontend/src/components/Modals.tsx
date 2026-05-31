@@ -6,12 +6,13 @@ interface Props {
   activeModal: ModalType;
   openModal: (modal: ModalType, deptOrEmp?: any, requestObj?: LeaveRequest) => void;
   closeModal: () => void;
+  confirmModal: () => void;
   selectedEmployee: Employee | null;
   selectedRequest: LeaveRequest | null;
   selectedDepartment: Department | null;
 }
 
-const Modals: React.FC<Props> = ({ activeModal, closeModal, selectedEmployee, selectedRequest, selectedDepartment }) => {
+const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment }) => {
   // Local state for the Add Employee form toggles
   const [isEmployeeChecked, setIsEmployeeChecked] = useState(true);
   const [isAdminChecked, setIsAdminChecked] = useState(true);
@@ -51,7 +52,7 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, selectedEmployee, se
               {activeModal === 'CHANGE_PASSWORD' && 'Do you really want to change password?'}
             </h3>
             <div className="modal-buttons">
-              <button className="btn-secondary" onClick={closeModal}>YES</button>
+              <button className="btn-secondary" onClick={confirmModal}>YES</button>
               <button className="btn-outline-primary" onClick={closeModal}>NO</button>
             </div>
           </div>

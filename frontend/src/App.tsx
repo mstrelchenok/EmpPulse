@@ -14,6 +14,7 @@ import ProfileScreen from './pages/ProfilePage';
 import type { ScreenType, ModalType, Employee, LeaveRequest, Department, MeUser, UserRole } from './types';
 import { deriveRole } from './types';
 import { canAccessRoute } from './utils/guards';
+import { authService } from './services/api';
 import './styles/global.css';
 
 const App: React.FC = () => {
@@ -114,13 +115,15 @@ const App: React.FC = () => {
       <Modals
         activeModal={activeModal}
         openModal={handleOpenModal}
-        closeModal={() => {
+        confirmModal={async () => {
           if (activeModal === 'LOGOUT') {
+            await authService.logout();
             setCurrentUser(null);
             setCurrentScreen('login');
           }
           setActiveModal(null);
         }}
+        closeModal={() => setActiveModal(null)}
         selectedEmployee={selectedEmployee}
         selectedRequest={selectedRequest}
         selectedDepartment={selectedDepartment}
