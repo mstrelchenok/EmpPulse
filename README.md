@@ -4,12 +4,18 @@
 
 | Tool | Version | Notes |
 |---|---|---|
-| JDK | 21 | `sudo apt install openjdk-21-jdk` |
-| Docker | any | `sudo apt install docker.io` |
-| docker compose | v2 | see below |
+| JDK | 21 | see install instructions below |
+| Docker | any | see install instructions below |
 | Node.js | 20+ | only for standalone frontend dev |
 
-**Docker Compose v2** (if not installed):
+### Linux
+
+```bash
+sudo apt install openjdk-21-jdk docker.io
+sudo usermod -aG docker $USER  # then restart your terminal
+```
+
+**Docker Compose v2** (if not bundled):
 ```bash
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
 mkdir -p $DOCKER_CONFIG/cli-plugins
@@ -18,11 +24,16 @@ curl -SL https://github.com/docker/compose/releases/download/v2.35.1/docker-comp
 chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 ```
 
-Add your user to the docker group (required once):
-```bash
-sudo usermod -aG docker $USER
-# then restart your terminal
+### Windows
+
+Install via [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/) (run in PowerShell):
+
+```powershell
+winget install Microsoft.OpenJDK.21
+winget install Docker.DockerDesktop
 ```
+
+After installing Docker Desktop, **restart your PC**, then launch Docker Desktop from the Start menu and wait for "Engine running" before running any `docker` commands.
 
 ---
 
@@ -32,7 +43,8 @@ Builds the React frontend, packages it into the Spring Boot jar, and runs everyt
 
 ```bash
 # 1. Build the jar (downloads Node 22 and builds the frontend automatically)
-./mvnw clean package -DskipTests
+./mvnw clean package -DskipTests     # Linux/macOS
+.\mvnw clean package -DskipTests     # Windows (PowerShell)
 
 # 2. Start all services
 docker compose up --build
@@ -57,9 +69,44 @@ Runs the Vite dev server with hot reload. Requires the backend to be running sep
 docker compose up -d db
 
 # Start the backend (in a separate terminal)
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/emppulse_db ./mvnw spring-boot:run
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5433/emppulse_db ./mvnw spring-boot:run   # Linux
+$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5433/emppulse_db"; .\mvnw spring-boot:run  # Windows
 
 # Start the frontend dev server (in a separate terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend → http://localhost:5173  
+Backend → http://localhost:8080
+
+---
+
+## Windows — without Docker
+
+If you prefer not to use Docker, install PostgreSQL natively instead:
+
+```powershell
+winget install Microsoft.OpenJDK.21
+winget install OpenJS.NodeJS.LTS
+winget install PostgreSQL.PostgreSQL
+```
+
+Create the database once (open **psql** or pgAdmin after PostgreSQL installs):
+
+```sql
+CREATE USER "user" WITH PASSWORD 'password';
+CREATE DATABASE emppulse_db OWNER "user";
+```
+
+Then start the backend and frontend in two separate terminals:
+
+```powershell
+# Terminal 1 — backend
+.\mvnw spring-boot:run "-Dspring.datasource.url=jdbc:postgresql://localhost:5432/emppulse_db"
+
+# Terminal 2 — frontend
 cd frontend
 npm install
 npm run dev
