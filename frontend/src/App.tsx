@@ -105,7 +105,7 @@ const App: React.FC = () => {
           />
         )}
         {currentScreen === 'my-profile' && (
-          <ProfileScreen isMyProfile={true} openModal={handleOpenModal} />
+          <ProfileScreen isMyProfile={true} currentUser={currentUser} openModal={handleOpenModal} />
         )}
         {currentScreen === 'employee-profile' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
           <ProfileScreen isMyProfile={false} employee={selectedEmployee} openModal={handleOpenModal} />
