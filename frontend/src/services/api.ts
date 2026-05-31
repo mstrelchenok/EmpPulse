@@ -21,6 +21,31 @@ export const authService = {
   },
 };
 
+export interface UserCreatePayload {
+  name: string;
+  surname: string;
+  email: string;
+  password: string;
+  employeeDepartmentId?: number | null;
+  yearlyVacationBalance?: number;
+  adminDepartmentIds?: number[];
+}
+
+export const userService = {
+  create: async (payload: UserCreatePayload): Promise<void> => {
+    const res = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message ?? 'Failed to create user');
+    }
+  },
+};
+
 export const employeeService = {
   getAll: async () => { throw new Error('Not implemented'); },
   create: async (_data: unknown) => { throw new Error('Not implemented'); },

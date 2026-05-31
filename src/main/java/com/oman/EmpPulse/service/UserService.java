@@ -75,7 +75,8 @@ public class UserService {
 
     @Transactional
     public void createUser(UserCreateRequest req, String callerRole) {
-        boolean wantsAdmin = req.getAdminDepartmentIds() != null && !req.getAdminDepartmentIds().isEmpty();
+        // null = no admin role; empty list = admin with no department assignments yet
+        boolean wantsAdmin = req.getAdminDepartmentIds() != null;
 
         if ("ADMIN".equals(callerRole) && wantsAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admins can only create employee accounts");

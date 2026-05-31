@@ -66,7 +66,7 @@ const Sidebar: React.FC<Props> = ({ currentScreen, setScreen, currentUser }) => 
           <div className="user-avatar"></div>
           <div className="user-info">
             <span className="user-name">{displayName}</span>
-            <span className="user-role">{displayRole}</span>
+            {role === 'OWNER' && <span className="user-role">{displayRole}</span>}
           </div>
         </div>
 

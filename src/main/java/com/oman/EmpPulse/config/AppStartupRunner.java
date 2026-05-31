@@ -33,8 +33,6 @@ public class AppStartupRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         seedUser("System", "Owner", ownerEmail, ownerPassword, UserRole.OWNER, false);
-        seedUser("Mock", "Admin", "admin@emppulse.com", "admin", UserRole.ADMIN, true);
-        seedUser("Mock", "Worker", "worker@emppulse.com", "admin", UserRole.WORKER, false);
     }
 
     private void seedUser(String name, String surname, String email, String password,
