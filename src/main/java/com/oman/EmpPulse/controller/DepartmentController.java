@@ -41,6 +41,27 @@ public class DepartmentController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @GetMapping("/{departmentId}")
+    public ResponseEntity<?> getDepartment(@PathVariable Long departmentId,
+                                           HttpServletRequest request) {
+        if (!isOwner(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("code", "FORBIDDEN", "message", "Access denied"));
+        }
+        return ResponseEntity.ok(departmentService.getDepartment(departmentId));
+    }
+
+    @DeleteMapping("/{departmentId}")
+    public ResponseEntity<?> deleteDepartment(@PathVariable Long departmentId,
+                                              HttpServletRequest request) {
+        if (!isOwner(request)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("code", "FORBIDDEN", "message", "Access denied"));
+        }
+        departmentService.deleteDepartment(departmentId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PatchMapping("/{departmentId}")
     public ResponseEntity<?> updateDepartment(@PathVariable Long departmentId,
                                               @RequestBody DepartmentUpdateRequest req,
@@ -57,5 +78,11 @@ public class DepartmentController {
         HttpSession session = request.getSession(false);
         if (session == null) return false;
         return "OWNER".equals(session.getAttribute("USER_ROLE"));
+    }
+
+    private boolean isAdmin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) return false;
+        return "ADMIN".equals(session.getAttribute("USER_ROLE"));
     }
 }

@@ -21,15 +21,40 @@ public class DepartmentService {
     private final AdminRepository adminRepository;
     private final AdminDepartmentRepository adminDepartmentRepository;
     private final UserRepository userRepository;
+    private final EmployeeRepository employeeRepository;
 
     public DepartmentService(DepartmentRepository departmentRepository,
                              AdminRepository adminRepository,
                              AdminDepartmentRepository adminDepartmentRepository,
-                             UserRepository userRepository) {
+                             UserRepository userRepository,
+                             EmployeeRepository employeeRepository) {
         this.departmentRepository = departmentRepository;
         this.adminRepository = adminRepository;
         this.adminDepartmentRepository = adminDepartmentRepository;
         this.userRepository = userRepository;
+        this.employeeRepository = employeeRepository;
+    }
+
+    public DepartmentResponse getDepartment(Long departmentId) {
+        Department department = departmentRepository.findById(departmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Department not found"));
+        return toDepartmentResponse(department);
+    }
+
+    @Transactional
+    public void deleteDepartment(Long departmentId) {
+        if (!departmentRepository.existsById(departmentId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Department not found");
+        }
+        if (employeeRepository.existsByDepartmentId(departmentId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cannot delete department: employees are assigned");
+        }
+        if (!adminDepartmentRepository.findByDepartmentId(departmentId).isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Cannot delete department: administrators are assigned");
+        }
+        departmentRepository.deleteById(departmentId);
     }
 
     public DepartmentListResponse getAllDepartments() {
