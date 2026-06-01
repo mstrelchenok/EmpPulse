@@ -284,6 +284,26 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/admins:
+    get:
+      tags:
+        - Admins
+      summary: List admins
+      description: Returns all non-deleted users who have admin profiles.
+      responses:
+        '200':
+          description: Admins list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/departments:
     get:
       tags:
