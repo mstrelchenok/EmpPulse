@@ -5,7 +5,6 @@ async function clientSafeError(
   fallback: string,
   overrides: Record<number, string> = {},
 ): Promise<Error> {
-  await res.text().catch(() => undefined);
   if (overrides[res.status]) return new Error(overrides[res.status]);
   switch (res.status) {
     case 400:
@@ -91,7 +90,7 @@ export interface DepartmentCreatePayload {
 }
 
 export const departmentService = {
-  // GET /api/departments (OWNER lists all; ADMIN sees only their own — filtered client-side)
+  // GET /api/departments (OWNER lists all; ADMIN receives only their own — filtered server-side)
   getAll: async (): Promise<Department[]> => {
     const res = await fetch('/api/departments', { credentials: 'include' });
     if (!res.ok) {
