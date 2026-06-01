@@ -1,4 +1,27 @@
-import type { MeUser } from '../types';
+import type { MeUser, Department, DepartmentAdmin } from '../types';
+
+async function clientSafeError(
+  res: Response,
+  fallback: string,
+  overrides: Record<number, string> = {},
+): Promise<Error> {
+  await res.text().catch(() => undefined);
+  if (overrides[res.status]) return new Error(overrides[res.status]);
+  switch (res.status) {
+    case 400:
+      return new Error('The request was invalid. Please check your input and try again.');
+    case 401:
+      return new Error('Your session has expired. Please sign in again.');
+    case 403:
+      return new Error('You do not have permission to perform this action.');
+    case 404:
+      return new Error('The requested item could not be found.');
+    case 409:
+      return new Error('This action conflicts with the current state. Please refresh and retry.');
+    default:
+      return new Error(fallback);
+  }
+}
 
 export const authService = {
   login: async (email: string, password: string): Promise<MeUser> => {
@@ -9,8 +32,10 @@ export const authService = {
       body: JSON.stringify({ email, password }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message ?? 'Invalid credentials');
+      throw await clientSafeError(res, 'Unable to sign in. Please try again.', {
+        400: 'Invalid email or password.',
+        401: 'Invalid email or password.',
+      });
     }
     const data = await res.json();
     return data.user as MeUser;
@@ -40,8 +65,9 @@ export const userService = {
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message ?? 'Failed to create user');
+      throw await clientSafeError(res, 'Failed to create user.', {
+        409: 'A user with this email already exists.',
+      });
     }
   },
 };
@@ -59,8 +85,80 @@ export const leaveRequestService = {
   delete: async (_id: string) => { throw new Error('Not implemented'); },
 };
 
+export interface DepartmentCreatePayload {
+  name: string;
+  adminIds?: number[];
+}
+
 export const departmentService = {
-  getAll: async () => { throw new Error('Not implemented'); },
-  create: async (_data: unknown) => { throw new Error('Not implemented'); },
-  delete: async (_id: string) => { throw new Error('Not implemented'); },
+  // GET /api/departments (OWNER lists all; ADMIN sees only their own — filtered client-side)
+  getAll: async (): Promise<Department[]> => {
+    const res = await fetch('/api/departments', { credentials: 'include' });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to load departments.');
+    }
+    const data = await res.json();
+    return (data.items ?? []) as Department[];
+  },
+
+  // GET /api/departments/{id} (OWNER, or ADMIN for departments they administer)
+  // `signal` lets a caller abort an in-flight request (e.g. a superseded selection).
+  getById: async (id: number, signal?: AbortSignal): Promise<Department> => {
+    const res = await fetch(`/api/departments/${id}`, { credentials: 'include', signal });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to load department.');
+    }
+    return (await res.json()) as Department;
+  },
+
+  // POST /api/departments (OWNER only)
+  create: async (payload: DepartmentCreatePayload): Promise<void> => {
+    const res = await fetch('/api/departments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to create department.', {
+        409: 'A department with this name already exists.',
+      });
+    }
+  },
+
+  // DELETE /api/departments/{id} (OWNER only) — department must have no admins or employees
+  delete: async (id: number): Promise<void> => {
+    const res = await fetch(`/api/departments/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to delete department.');
+    }
+  },
+
+  // PATCH /api/departments/{id} (OWNER only) — rename and/or reassign admins
+  update: async (id: number, payload: { name?: string; adminIds?: number[] }): Promise<void> => {
+    const res = await fetch(`/api/departments/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to update department.');
+    }
+  },
+};
+
+export const adminService = {
+  // GET /api/admins (OWNER only) — every admin, used to assign admins to departments
+  getAll: async (): Promise<DepartmentAdmin[]> => {
+    const res = await fetch('/api/admins', { credentials: 'include' });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to load admins.');
+    }
+    const data = await res.json();
+    return (data.items ?? []) as DepartmentAdmin[];
+  },
 };

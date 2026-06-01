@@ -1,6 +1,4 @@
-
-
-// --- Domain Types ---
+// Kept for the (currently hidden) default working-hours feature.
 export interface WorkingShift {
   start: string;
   end: string;
@@ -11,11 +9,17 @@ export interface DaySchedule {
   shifts: WorkingShift[];
 }
 
+export interface DepartmentAdmin {
+  id: number;
+  user: { id: number; name: string; surname: string; email: string };
+  departmentIds: number[];
+  active: boolean;
+}
+
 export interface Department {
-  id: string;
+  id: number;
   name: string;
-  administrators: string[];
-  schedule: DaySchedule[];
+  admins: DepartmentAdmin[];
 }
 
 export interface Employee {
@@ -36,7 +40,7 @@ export interface LeaveRequest {
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   reason?: string;
 }
-// --- Auth / Current User ---
+
 export type UserRole = 'OWNER' | 'ADMIN' | 'WORKER';
 
 export interface MeUser {
@@ -50,6 +54,10 @@ export interface MeUser {
   adminProfile: { id: number; departmentIds: number[] } | null;
 }
 
+// A user can hold several profiles at once,
+// so we collapse to a single effective role by precedence: owner outranks admin outranks worker.
+// This single role drives route access (see canAccessRoute) and which UI controls are shown.
+// CHANGE WHEN MY REQUEST PAGE IS ADDED
 export function deriveRole(user: MeUser): UserRole {
   if (user.owner) return 'OWNER';
   if (user.adminProfile !== null) return 'ADMIN';
@@ -76,7 +84,7 @@ export type ModalType =
   | 'DELETE_DEPARTMENT'
   | 'EDIT_ADMINS' | 'EDIT_WORKING_HOURS'
   | 'ADD_LEAVE' | 'EDIT_LEAVE'
-  | 'CREATE_REQUEST' | 'ACCEPT_REQUEST' // from other screens
-  | 'ADD_REQUEST_FORM' | 'EDIT_LEAVE_FORM' // NEW from MyRequests screen
-  | 'DELETE_LEAVE' | 'CANCEL_LEAVE' | 'LOGOUT' | 'CHANGE_PASSWORD_CONFIRM' // Confirmations
-  | 'CHANGE_PASSWORD_FORM' | 'CHANGE_PASSWORD'; // Existing carried from previous turn
+  | 'CREATE_REQUEST' | 'ACCEPT_REQUEST' 
+  | 'ADD_REQUEST_FORM' | 'EDIT_LEAVE_FORM' 
+  | 'DELETE_LEAVE' | 'CANCEL_LEAVE' | 'LOGOUT' | 'CHANGE_PASSWORD_CONFIRM' 
+  | 'CHANGE_PASSWORD_FORM' | 'CHANGE_PASSWORD'; 

@@ -1,18 +1,29 @@
-// src/components/screens/DepartmentDetailScreen.tsx
 import React from 'react';
-import type { Department, ModalType } from '../types';
+import type { Department, ModalType, UserRole } from '../types';
 
 interface Props {
   department: Department | null;
+  loading?: boolean;
+  userRole: UserRole;
   openModal: (modal: ModalType, dept?: Department) => void;
   onBack: () => void;
 }
 
-const allDaysOrdered: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-];
+// NOTE: The default working-hours feature is not wired to the API yet, so the
+// working-hours table and its button are commented out below (kept for later).
+// const allDaysOrdered: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
+//   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+// ];
 
-const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack }) => {
+const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, userRole, openModal, onBack }) => {
+  if (loading && !department) {
+    return (
+      <div className="screen-container">
+        <p>Loading department…</p>
+      </div>
+    );
+  }
+
   if (!department) {
     return (
       <div className="screen-container">
@@ -22,11 +33,13 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack
     );
   }
 
+  const isOwner = userRole === 'OWNER';
+
   // Pre-process shifts to handle sparse schedule mapping safely
-  const getShiftsForDay = (dayName: string) => {
-    const found = department.schedule.find(s => s.day === dayName);
-    return found ? found.shifts : [];
-  };
+  // const getShiftsForDay = (dayName: string) => {
+  //   const found = department.schedule.find(s => s.day === dayName);
+  //   return found ? found.shifts : [];
+  // };
 
   return (
     <div className="screen-container" style={{ maxWidth: 1080 }}>
@@ -46,23 +59,30 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack
         <div className="detail-column">
           <h3 className="column-section-title">Admins</h3>
           <div className="card-box list-box" style={{ padding: 20 }}>
-            {department.administrators.map((adminName, index) => (
-              <div key={index} className="admin-block-item">
-                {adminName}
+            {department.admins.length === 0 && (
+              <div className="admin-block-item">No administrators assigned.</div>
+            )}
+            {department.admins.map((admin) => (
+              <div key={admin.id} className="admin-block-item">
+                {admin.user.name} {admin.user.surname}
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 20 }}>
-            <button 
-              className="primary-btn" 
-              onClick={() => openModal('EDIT_ADMINS', department)}
-            >
-              edit admins
-            </button>
-          </div>
+          {/* Editing admins is owner-only. */}
+          {isOwner && (
+            <div style={{ marginTop: 20 }}>
+              <button
+                className="primary-btn"
+                onClick={() => openModal('EDIT_ADMINS', department)}
+              >
+                edit admins
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Working Hours Matrix Column */}
+        {/* Working Hours Matrix Column — hidden for now (default-hours API not wired). */}
+        {/*
         <div className="detail-column">
           <h3 className="column-section-title">Default working hours</h3>
           <div className="card-box schedule-matrix-card">
@@ -90,14 +110,15 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack
             })}
           </div>
           <div style={{ marginTop: 20 }}>
-            <button 
-              className="primary-btn" 
+            <button
+              className="primary-btn"
               onClick={() => openModal('EDIT_WORKING_HOURS', department)}
             >
               edit working hours
             </button>
           </div>
         </div>
+        */}
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-// src/components/screens/MyRequestsScreen.tsx
 import React, { useState } from 'react';
 import type { ModalType, LeaveRequest } from '../types';
 import trashIcon from '../assets/trash-icon.png.webp';
@@ -64,7 +63,6 @@ const MyRequestsScreen: React.FC<Props> = ({ openModal }) => {
       </div>
 
       <div className="center-action" style={{ marginTop: 40 }}>
-        {/* Fires the specific form popup */}
         <button className="primary-btn" onClick={() => openModal('ADD_LEAVE')}>
           + add request
         </button>

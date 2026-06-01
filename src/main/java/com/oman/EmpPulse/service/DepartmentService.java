@@ -41,6 +41,14 @@ public class DepartmentService {
         return toDepartmentResponse(department);
     }
 
+    /** Returns true if the given user is an admin assigned to the department. */
+    public boolean isAdminOfDepartment(Long userId, Long departmentId) {
+        return adminRepository.findByUserId(userId)
+                .map(admin -> adminDepartmentRepository.findByAdminId(admin.getId()).stream()
+                        .anyMatch(ad -> ad.getDepartmentId().equals(departmentId)))
+                .orElse(false);
+    }
+
     @Transactional
     public void deleteDepartment(Long departmentId) {
         if (!departmentRepository.existsById(departmentId)) {
@@ -59,6 +67,17 @@ public class DepartmentService {
 
     public DepartmentListResponse getAllDepartments() {
         List<DepartmentResponse> items = departmentRepository.findAll().stream()
+                .map(this::toDepartmentResponse)
+                .toList();
+        return new DepartmentListResponse(items);
+    }
+
+    public DepartmentListResponse getDepartmentsForAdmin(Long userId) {
+        Admin admin = adminRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied"));
+        List<Long> deptIds = adminDepartmentRepository.findByAdminId(admin.getId())
+                .stream().map(AdminDepartment::getDepartmentId).toList();
+        List<DepartmentResponse> items = departmentRepository.findAllById(deptIds).stream()
                 .map(this::toDepartmentResponse)
                 .toList();
         return new DepartmentListResponse(items);
@@ -105,9 +124,9 @@ public class DepartmentService {
             for (Long adminId : currentAdminIds) {
                 if (!newAdminIdSet.contains(adminId)) {
                     long deptCount = adminDepartmentRepository.findByAdminId(adminId).size();
-                    if (deptCount <= 2) {
+                    if (deptCount <= 1) {
                         throw new ResponseStatusException(HttpStatus.CONFLICT,
-                                "Cannot detach admin " + adminId + ": must oversee more than 2 departments");
+                                "Cannot detach admin " + adminId + ": must oversee more than 1 department");
                     }
                 }
             }
