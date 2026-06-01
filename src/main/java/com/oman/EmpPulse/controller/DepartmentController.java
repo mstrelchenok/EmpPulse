@@ -28,7 +28,7 @@ public class DepartmentController {
         if ("OWNER".equals(role)) {
             return ResponseEntity.ok(departmentService.getAllDepartments());
         }
-        if ("ADMIN".equals(role)) {
+        if ("ADMIN".equals(role) && session != null) {
             Long userId = (Long) session.getAttribute("USER_ID");
             return ResponseEntity.ok(departmentService.getDepartmentsForAdmin(userId));
         }
