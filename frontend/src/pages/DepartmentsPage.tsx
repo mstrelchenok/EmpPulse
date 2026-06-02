@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import type { ModalType, Department, MeUser, UserRole } from '../types';
+import type { ModalType, Department } from '../types';
 import trashIcon from '../assets/trash-icon.png.webp';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   departments: Department[];
   loading?: boolean;
-  userRole: UserRole;
-  currentUser: MeUser | null;
   openModal: (modal: ModalType, dept?: Department) => void;
   onSelectDepartment: (dept: Department) => void;
 }
 
-const DepartmentsScreen: React.FC<Props> = ({ departments, loading = false, userRole, currentUser, openModal, onSelectDepartment }) => {
+const DepartmentsScreen: React.FC<Props> = ({ departments, loading = false, openModal, onSelectDepartment }) => {
+  const { currentUser, userRole } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
   const isOwner = userRole === 'OWNER';
@@ -59,7 +59,6 @@ const DepartmentsScreen: React.FC<Props> = ({ departments, loading = false, user
               <span className="emp-name">{dept.name}</span>
             </div>
 
-            {/* Deleting a department is owner-only. */}
             {isOwner && (
               <button
                 className="slide-bin-btn"
@@ -76,7 +75,6 @@ const DepartmentsScreen: React.FC<Props> = ({ departments, loading = false, user
         ))}
       </div>
 
-      {/* Adding a department is owner-only. */}
       {isOwner && (
         <div className="center-action" style={{ marginTop: 40 }}>
           <button className="primary-btn" onClick={() => openModal('ADD_DEPARTMENT')}>

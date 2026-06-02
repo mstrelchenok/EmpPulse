@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
-import type { ModalType, Department, UserRole } from '../../types';
+import type { ModalType, Department } from '../../types';
 import { userService } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 interface Props {
   activeModal: ModalType;
   closeModal: () => void;
   departments: Department[];
-  userRole: UserRole | null;
 }
 
-const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, departments, userRole }) => {
+const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, departments }) => {
+  const { userRole } = useAuth();
   // An admin can only ever create plain employees (no admin accounts, no role choice).
   const isAdminCreator = userRole === 'ADMIN';
 
@@ -90,7 +91,6 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
       <label>Email<input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} /></label>
       <label>Password<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></label>
 
-      {/* Employee Checkbox Section — owners choose roles; admins always create employees. */}
       {!isAdminCreator && (
         <div className="checkbox-header" onClick={() => setIsEmployeeChecked(!isEmployeeChecked)}>
           <h3>Employee</h3>
@@ -98,7 +98,6 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
         </div>
       )}
 
-      {/* Department options come from the API; nothing is shown when none exist yet. */}
       {isEmployeeChecked && (
         <label style={{ marginBottom: 8 }}>Department
           <select
@@ -113,7 +112,6 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
         </label>
       )}
 
-      {/* Administrator role is owner-only (admins cannot create other admins). */}
       {!isAdminCreator && (
         <>
           <div className="checkbox-header" onClick={() => setIsAdminChecked(!isAdminChecked)}>
@@ -143,7 +141,6 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
 
       {createError && <p className="form-error">{createError}</p>}
 
-      {/* Default working hours are hidden for now, so a single create action remains. */}
       <button className="primary-btn full-width" onClick={handleCreateUser} disabled={creating || departments.length === 0}>
         + add employee
       </button>

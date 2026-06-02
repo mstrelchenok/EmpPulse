@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import type { ModalType, Employee, LeaveRequest, MeUser } from '../types';
+import type { ModalType, Employee, LeaveRequest } from '../types';
 import { MOCK_LOGGED_HOURS } from '../utils/mockData';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   isMyProfile?: boolean;
-  currentUser?: MeUser | null;
   employee?: Employee | null;
   openModal: (modal: ModalType, emp?: Employee, requestObj?: LeaveRequest) => void;
 }
 
-const ProfilePage: React.FC<Props> = ({ isMyProfile, currentUser, employee, openModal }) => {
+const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
+  const { currentUser } = useAuth();
   const [loggedExpanded, setLoggedExpanded] = useState(true);
   const [unpaidExpanded, setUnpaidExpanded] = useState(true);
 
-  // For "My Profile", render only what the GET /api/me endpoint actually returns.
   const targetName = isMyProfile
     ? [currentUser?.name, currentUser?.surname].filter(Boolean).join(' ')
     : employee?.name || 'Andrei Didenko';
@@ -51,7 +51,6 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, currentUser, employee, open
             )}
           </div>
           <div className="banner-stats">
-            {/* Status, department, and role are intentionally left visible but empty (not yet sourced from the API). */}
             <div><label>Department:</label><span></span></div>
             <div><label>Role:</label><span></span></div>
             <div><label>Status:</label><span></span></div>
@@ -60,7 +59,6 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, currentUser, employee, open
 
         <div className="vacation-widget">
           <h4>Vacation balance</h4>
-          {/* Visible but empty: vacation balance number is not yet sourced from the API. */}
           <div className="balance-badge-card">Vacations day left: </div>
         </div>
       </div>

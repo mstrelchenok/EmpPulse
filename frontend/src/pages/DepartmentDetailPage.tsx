@@ -1,10 +1,10 @@
 import React from 'react';
-import type { Department, ModalType, UserRole } from '../types';
+import type { Department, ModalType } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   department: Department | null;
   loading?: boolean;
-  userRole: UserRole;
   openModal: (modal: ModalType, dept?: Department) => void;
   onBack: () => void;
 }
@@ -15,7 +15,8 @@ interface Props {
 //   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
 // ];
 
-const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, userRole, openModal, onBack }) => {
+const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, openModal, onBack }) => {
+  const { userRole } = useAuth();
   if (loading && !department) {
     return (
       <div className="screen-container">
@@ -34,12 +35,6 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
   }
 
   const isOwner = userRole === 'OWNER';
-
-  // Pre-process shifts to handle sparse schedule mapping safely
-  // const getShiftsForDay = (dayName: string) => {
-  //   const found = department.schedule.find(s => s.day === dayName);
-  //   return found ? found.shifts : [];
-  // };
 
   return (
     <div className="screen-container" style={{ maxWidth: 1080 }}>
@@ -68,7 +63,6 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
               </div>
             ))}
           </div>
-          {/* Editing admins is owner-only. */}
           {isOwner && (
             <div style={{ marginTop: 20 }}>
               <button
@@ -81,7 +75,6 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
           )}
         </div>
 
-        {/* Working Hours Matrix Column — hidden for now (default-hours API not wired). */}
         {/*
         <div className="detail-column">
           <h3 className="column-section-title">Default working hours</h3>

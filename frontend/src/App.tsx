@@ -10,16 +10,16 @@ import DepartmentsScreen from './pages/DepartmentsPage';
 import DepartmentDetailScreen from './pages/DepartmentDetailPage';
 import ProfileScreen from './pages/ProfilePage';
 
-import type { ScreenType, ModalType, Employee, LeaveRequest, Department, MeUser, UserRole } from './types';
-import { deriveRole } from './types';
+import type { ScreenType, ModalType, Employee, LeaveRequest, Department, MeUser } from './types';
 import { canAccessRoute } from './utils/guards';
-import { authService, departmentService } from './services/api';
+import { departmentService } from './services/api';
+import { useAuth } from './context/AuthContext';
 import './styles/global.css';
 
 const App: React.FC = () => {
+  const { userRole, logout } = useAuth();
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('login');
   const [activeModal, setActiveModal] = useState<ModalType>(null);
-  const [currentUser, setCurrentUser] = useState<MeUser | null>(null);
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
@@ -33,11 +33,9 @@ const App: React.FC = () => {
   const [departmentDetailLoading, setDepartmentDetailLoading] = useState(false);
   const [deleteDepartmentError, setDeleteDepartmentError] = useState<string | null>(null);
 
-  // Active department-detail fetch, so a newer selection can cancel an older one
-  // outright (rather than letting a stale request resolve and discarding it).
+  // When user selects a new department while a previous fetch is in flight, abort the stale request.
+  // This prevents a slower response from overwriting data from a faster selection.
   const selectAbortRef = useRef<AbortController | null>(null);
-
-  const userRole: UserRole | null = currentUser ? deriveRole(currentUser) : null;
 
   const reloadDepartments = useCallback(async () => {
     setDepartmentsLoading(true);
@@ -62,9 +60,7 @@ const App: React.FC = () => {
   }, [userRole, reloadDepartments]);
 
   const handleLoginSuccess = (user: MeUser) => {
-    setCurrentUser(user);
-    const role = deriveRole(user);
-    setCurrentScreen(role === 'WORKER' ? 'my-requests' : 'employees');
+    setCurrentScreen(user.adminProfile === null && !user.owner ? 'my-requests' : 'employees');
   };
 
   const handleSetScreen = (screen: ScreenType) => {
@@ -93,8 +89,6 @@ const App: React.FC = () => {
       setCurrentScreen('forbidden');
       return;
     }
-    // Cancel any in-flight selection so a slower request can't land on a stale
-    // department's data — the obsolete fetch is aborted, not merely ignored.
     selectAbortRef.current?.abort();
     const controller = new AbortController();
     selectAbortRef.current = controller;
@@ -105,11 +99,9 @@ const App: React.FC = () => {
       setSelectedDepartment(fresh);
       setCurrentScreen('department-detail');
     } catch (e) {
-      // A superseded request was aborted on purpose — ignore its rejection.
       if (controller.signal.aborted) return;
       setDepartmentError(e instanceof Error ? e.message : 'Failed to load department');
     } finally {
-      // Only the still-current request owns the loading flag.
       if (selectAbortRef.current === controller) {
         setDepartmentDetailLoading(false);
         selectAbortRef.current = null;
@@ -147,7 +139,6 @@ const App: React.FC = () => {
       <Sidebar
         currentScreen={currentScreen}
         setScreen={handleSetScreen}
-        currentUser={currentUser}
       />
 
       <main className="main-content-area">
@@ -170,8 +161,6 @@ const App: React.FC = () => {
           <DepartmentsScreen
             departments={departments}
             loading={departmentsLoading}
-            userRole={userRole}
-            currentUser={currentUser}
             openModal={handleOpenModal}
             onSelectDepartment={handleSelectDepartment}
           />
@@ -180,13 +169,12 @@ const App: React.FC = () => {
           <DepartmentDetailScreen
             department={selectedDepartment}
             loading={departmentDetailLoading}
-            userRole={userRole}
             openModal={handleOpenModal}
             onBack={() => handleSetScreen('departments')}
           />
         )}
         {currentScreen === 'my-profile' && (
-          <ProfileScreen isMyProfile={true} currentUser={currentUser} openModal={handleOpenModal} />
+          <ProfileScreen isMyProfile={true} openModal={handleOpenModal} />
         )}
         {currentScreen === 'employee-profile' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
           <ProfileScreen isMyProfile={false} employee={selectedEmployee} openModal={handleOpenModal} />
@@ -198,15 +186,11 @@ const App: React.FC = () => {
         openModal={handleOpenModal}
         confirmModal={async () => {
           if (activeModal === 'LOGOUT') {
-            // Clear the local session even if the network logout call fails,
-            // so the user is never stranded in a signed-in state.
-            try {
-              await authService.logout();
-            } finally {
-              setCurrentUser(null);
-              setCurrentScreen('login');
-              setActiveModal(null);
-            }
+            // AuthContext.logout clears the local session even if the network
+            // call fails, so the user is never stranded in a signed-in state.
+            await logout();
+            setCurrentScreen('login');
+            setActiveModal(null);
             return;
           }
           if (activeModal === 'DELETE_DEPARTMENT' && selectedDepartment) {
@@ -233,7 +217,6 @@ const App: React.FC = () => {
         selectedRequest={selectedRequest}
         selectedDepartment={selectedDepartment}
         departments={departments}
-        userRole={userRole}
         onDepartmentsChanged={refreshDepartments}
         confirmError={deleteDepartmentError}
         onConfirmErrorClear={() => setDeleteDepartmentError(null)}

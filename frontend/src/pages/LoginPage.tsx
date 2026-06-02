@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import type { MeUser } from '../types';
-import { authService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   onLoginSuccess: (user: MeUser) => void;
 }
 
 const LoginPage: React.FC<Props> = ({ onLoginSuccess }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +18,7 @@ const LoginPage: React.FC<Props> = ({ onLoginSuccess }) => {
     setError('');
     setLoading(true);
     try {
-      const user = await authService.login(email, password);
+      const user = await login(email, password);
       onLoginSuccess(user);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Login failed');

@@ -1,16 +1,16 @@
 import React from 'react';
-import type { ScreenType, MeUser } from '../types';
-import { deriveRole } from '../types';
+import type { ScreenType } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
   currentScreen: ScreenType;
   setScreen: (screen: ScreenType) => void;
-  currentUser: MeUser | null;
 }
 
-const Sidebar: React.FC<Props> = ({ currentScreen, setScreen, currentUser }) => {
-  const role = currentUser ? deriveRole(currentUser) : null;
+const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
+  const { currentUser, userRole: role } = useAuth();
 
+  // Hide navigation items based on user role to prevent access to unauthorized screens.
   const showEmployees     = role === 'OWNER' || role === 'ADMIN';
   const showRequestMgr    = role === 'OWNER' || role === 'ADMIN';
   const showDepartments   = role === 'OWNER' || role === 'ADMIN';
@@ -66,6 +66,7 @@ const Sidebar: React.FC<Props> = ({ currentScreen, setScreen, currentUser }) => 
           <div className="user-avatar"></div>
           <div className="user-info">
             <span className="user-name">{displayName}</span>
+            {/* Only show role badge for owner (already prominent in the app). */}
             {role === 'OWNER' && <span className="user-role">{displayRole}</span>}
           </div>
         </div>

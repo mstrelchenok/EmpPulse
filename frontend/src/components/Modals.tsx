@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ModalType, Employee, LeaveRequest, Department, UserRole } from '../types';
+import type { ModalType, Employee, LeaveRequest, Department } from '../types';
 import ConfirmModal from './modals/ConfirmModal';
 import AddEmployeeModal from './modals/AddEmployeeModal';
 import EditAdminsModal from './modals/EditAdminsModal';
@@ -18,7 +18,6 @@ interface Props {
   selectedRequest: LeaveRequest | null;
   selectedDepartment: Department | null;
   departments: Department[];
-  userRole: UserRole | null;
   onDepartmentsChanged: () => void | Promise<void>;
   confirmError?: string | null;
   onConfirmErrorClear?: () => void;
@@ -26,7 +25,7 @@ interface Props {
 
 const CONFIRM_MODALS: ModalType[] = ['DELETE_EMPLOYEE', 'DELETE_LEAVE', 'CANCEL_LEAVE', 'DELETE_DEPARTMENT', 'LOGOUT', 'CHANGE_PASSWORD'];
 
-const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment, departments, userRole, onDepartmentsChanged, confirmError, onConfirmErrorClear }) => {
+const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment, departments, onDepartmentsChanged, confirmError, onConfirmErrorClear }) => {
   if (!activeModal) return null;
 
   return (
@@ -49,7 +48,6 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
             activeModal={activeModal}
             closeModal={closeModal}
             departments={departments}
-            userRole={userRole}
           />
         )}
 
