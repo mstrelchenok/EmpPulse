@@ -23,7 +23,7 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
 
   return (
     <div className="screen-container">
-      <header className="page-header" style={{ marginBottom: 24 }}>
+      <header className="page-header profile-header">
         <h2>{isMyProfile ? 'My Profile' : "Employee's Profile"}</h2>
         {isMyProfile && (
           <button className="btn-logout-pill" onClick={() => openModal('LOGOUT')}>log out</button>
@@ -70,7 +70,7 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
         Note: the rows still use MOCK_LOGGED_HOURS as placeholder data.
       */}
       {false && (
-        <div className="accordion-section" style={{ marginTop: 32 }}>
+        <div className="accordion-section">
           <h3 className="department-title" onClick={() => setLoggedExpanded(!loggedExpanded)}>
             Logged hours <span className={`chevron ${loggedExpanded ? 'expanded' : ''}`}>►</span>
           </h3>
@@ -95,7 +95,7 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
       )}
 
       {!isMyProfile && (
-        <div className="center-action" style={{ marginTop: 24, marginBottom: 24 }}>
+        <div className="center-action tight">
           <button className="primary-btn" onClick={() => openModal('LOG_HOURS', employee as Employee)}>+ log hours</button>
         </div>
       )}
@@ -107,7 +107,7 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
         Note: the rows still use MOCK_LOGGED_HOURS as placeholder data.
       */}
       {false && (
-        <div className="accordion-section" style={{ marginTop: isMyProfile ? 32 : 0 }}>
+        <div className={`accordion-section ${isMyProfile ? '' : 'no-top-margin'}`}>
           <h3 className="department-title" onClick={() => setUnpaidExpanded(!unpaidExpanded)}>
             Unpaid hours <span className={`chevron ${unpaidExpanded ? 'expanded' : ''}`}>🡇</span>
           </h3>

@@ -37,9 +37,9 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
   const isOwner = userRole === 'OWNER';
 
   return (
-    <div className="screen-container" style={{ maxWidth: 1080 }}>
-      <header className="page-header" style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+    <div className="screen-container department-detail-screen">
+      <header className="page-header">
+        <div className="department-detail-title">
           <button className="btn-pill-secondary" onClick={onBack}>►</button>
           <h2>{department.name}</h2>
         </div>
@@ -53,7 +53,7 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
         {/* Administrator Column */}
         <div className="detail-column">
           <h3 className="column-section-title">Admins</h3>
-          <div className="card-box list-box" style={{ padding: 20 }}>
+          <div className="card-box list-box department-detail-card">
             {department.admins.length === 0 && (
               <div className="admin-block-item">No administrators assigned.</div>
             )}
@@ -64,7 +64,7 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
             ))}
           </div>
           {isOwner && (
-            <div style={{ marginTop: 20 }}>
+            <div className="detail-action-row">
               <button
                 className="primary-btn"
                 onClick={() => openModal('EDIT_ADMINS', department)}
@@ -92,7 +92,7 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
                         <span className="shift-index">{sIdx + 1})</span>
                         <div className="time-range-display">
                           <span>{shift.start}</span>
-                          <span style={{ margin: '0 8px', opacity: 0.6 }}>—</span>
+                          <span className="muted-separator">—</span>
                           <span>{shift.end}</span>
                         </div>
                       </div>
@@ -102,7 +102,7 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
               );
             })}
           </div>
-          <div style={{ marginTop: 20 }}>
+          <div className="detail-action-row">
             <button
               className="primary-btn"
               onClick={() => openModal('EDIT_WORKING_HOURS', department)}

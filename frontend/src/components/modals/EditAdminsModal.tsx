@@ -79,7 +79,7 @@ const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDep
   return (
     <div className="modal-form">
       <h2>Edit administrators</h2>
-      <h3 style={{ textAlign: 'left', fontSize: 16, marginTop: 16 }}>
+      <h3 className="edit-admins-title">
         {selectedDepartment?.name}
       </h3>
 
@@ -119,7 +119,7 @@ const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDep
 
       {adminsError && <p className="form-error">{adminsError}</p>}
 
-      <button className="primary-btn full-width" onClick={handleSaveAdmins} disabled={savingAdmins} style={{ marginTop: 24 }}>
+      <button className="primary-btn full-width edit-admins-save-btn" onClick={handleSaveAdmins} disabled={savingAdmins}>
         save administrators
       </button>
     </div>

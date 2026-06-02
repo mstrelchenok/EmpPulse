@@ -99,7 +99,7 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
       )}
 
       {isEmployeeChecked && (
-        <label style={{ marginBottom: 8 }}>Department
+        <label className="field-tight">Department
           <select
             value={employeeDeptId ?? ''}
             onChange={(e) => setEmployeeDeptId(e.target.value ? Number(e.target.value) : null)}

@@ -56,7 +56,7 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
         )}
       </div>
 
-      <div className="accordion-section" style={{ marginTop: 32 }}>
+      <div className="accordion-section">
         <h3 className="department-title" onClick={() => setUnassignedExpanded(!unassignedExpanded)}>
           Non-assigned department
           <span className={`chevron ${unassignedExpanded ? 'expanded' : ''}`}>►</span>
@@ -80,7 +80,7 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
         )}
       </div>
 
-      <div className="center-action" style={{ marginTop: 40 }}>
+      <div className="center-action">
         <button className="primary-btn" onClick={() => openModal('ADD_EMPLOYEE')}>+ add employee</button>
       </div>
     </div>

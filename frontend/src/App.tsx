@@ -143,10 +143,10 @@ const App: React.FC = () => {
 
       <main className="main-content-area">
         {departmentError && (
-          <p className="form-error" style={{ margin: '0 0 16px' }}>{departmentError}</p>
+          <p className="form-error form-error-block">{departmentError}</p>
         )}
         {departmentsLoadError && (
-          <p className="form-error" style={{ margin: '0 0 16px' }}>{departmentsLoadError}</p>
+          <p className="form-error form-error-block">{departmentsLoadError}</p>
         )}
         {currentScreen === 'employees' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
           <EmployeesScreen openEmployeeProfile={handleOpenEmployeeProfile} openModal={handleOpenModal} />

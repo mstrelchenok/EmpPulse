@@ -33,13 +33,12 @@ const MyRequestsScreen: React.FC<Props> = ({ openModal }) => {
             {myRecordsData.map(req => (
               <div 
                 key={req.id} 
-                className={`employee-row hover-slide-container ${req.status === 'PENDING' ? 'dashed-active-row' : ''}`}
+                className={`employee-row hover-slide-container clickable ${req.status === 'PENDING' ? 'dashed-active-row' : ''}`}
                 onClick={() => openModal('EDIT_LEAVE_FORM', null, req)} // Red arrow connects ALL rows. Click to edit.
-                style={{ cursor: 'pointer' }} // Design shows row as a whole is a button
               >
                 <span className={`badge badge-${req.type.toLowerCase()}`}>{req.type}</span>
-                <span className="date-span" style={{ flex: 1, textAlign: 'center' }}>{req.dateRange}</span>
-                <div className="emp-meta" style={{ gap: 16 }}>
+                <span className="date-span">{req.dateRange}</span>
+                <div className="emp-meta">
                   <span className={`status-label status-${req.status.toLowerCase()}`}>{req.status}</span>
                 </div>
 
@@ -62,7 +61,7 @@ const MyRequestsScreen: React.FC<Props> = ({ openModal }) => {
         )}
       </div>
 
-      <div className="center-action" style={{ marginTop: 40 }}>
+      <div className="center-action">
         <button className="primary-btn" onClick={() => openModal('ADD_LEAVE')}>
           + add request
         </button>

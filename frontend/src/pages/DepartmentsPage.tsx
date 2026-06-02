@@ -76,7 +76,7 @@ const DepartmentsScreen: React.FC<Props> = ({ departments, loading = false, open
       </div>
 
       {isOwner && (
-        <div className="center-action" style={{ marginTop: 40 }}>
+        <div className="center-action">
           <button className="primary-btn" onClick={() => openModal('ADD_DEPARTMENT')}>
             + add department
           </button>

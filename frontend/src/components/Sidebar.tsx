@@ -22,7 +22,7 @@ const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
   return (
     <aside className="sidebar">
       <div className="sidebar-top">
-        <h1 className="brand-logo" onClick={() => setScreen(role === 'WORKER' ? 'my-requests' : 'employees')} style={{ cursor: 'pointer' }}>
+        <h1 className="brand-logo clickable" onClick={() => setScreen(role === 'WORKER' ? 'my-requests' : 'employees')}>
           EmpPulse
         </h1>
         <nav className="sidebar-nav">
@@ -62,7 +62,7 @@ const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
       </div>
 
       <div className="sidebar-bottom">
-        <div className="user-profile" onClick={() => setScreen('my-profile')} style={{ cursor: 'pointer' }}>
+        <div className="user-profile clickable" onClick={() => setScreen('my-profile')}>
           <div className="user-avatar"></div>
           <div className="user-info">
             <span className="user-name">{displayName}</span>
@@ -79,7 +79,7 @@ const Sidebar: React.FC<Props> = ({ currentScreen, setScreen }) => {
           </div>
           <div className="lang-toggles">
             <span className="lang-icon">🇬🇧</span>
-            <span className="lang-icon" style={{ opacity: 0.4 }}>🇺🇦</span>
+            <span className="lang-icon is-dimmed">🇺🇦</span>
           </div>
         </div>
       </div>

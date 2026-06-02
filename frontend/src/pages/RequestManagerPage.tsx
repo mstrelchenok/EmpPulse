@@ -40,7 +40,7 @@ const RequestManagerPage: React.FC<Props> = ({ openModal }) => {
         )}
       </div>
 
-      <div className="center-action" style={{ marginTop: 40 }}>
+      <div className="center-action">
         <button className="primary-btn" onClick={() => openModal('CREATE_REQUEST')}>+ create request</button>
       </div>
     </div>
