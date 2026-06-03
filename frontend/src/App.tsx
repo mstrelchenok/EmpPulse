@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Modals from './components/Modals';
 import LoginScreen from './pages/LoginPage';
@@ -12,8 +12,10 @@ import ProfileScreen from './pages/ProfilePage';
 
 import type { ScreenType, ModalType, Employee, LeaveRequest, Department, MeUser } from './types';
 import { canAccessRoute } from './utils/guards';
-import { departmentService } from './services/api';
 import { useAuth } from './context/AuthContext';
+import { useDepartmentsList } from './hooks/useDepartmentsList';
+import { useDepartmentDetail } from './hooks/useDepartmentDetail';
+import { useDeleteDepartment } from './hooks/useDepartmentMutations';
 import './styles/global.css';
 
 const App: React.FC = () => {
@@ -23,41 +25,16 @@ const App: React.FC = () => {
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
+  // Full department object passed into modals (e.g. EditAdmins seeds from .admins).
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-
-  // Shared department data (used by the departments screens and the user-creation modal)
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [departmentsLoading, setDepartmentsLoading] = useState(false);
-  const [departmentsLoadError, setDepartmentsLoadError] = useState<string | null>(null);
-  const [departmentError, setDepartmentError] = useState<string | null>(null);
-  const [departmentDetailLoading, setDepartmentDetailLoading] = useState(false);
+  // Id of the department whose detail view is open; drives the detail query.
+  const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [deleteDepartmentError, setDeleteDepartmentError] = useState<string | null>(null);
 
-  // When user selects a new department while a previous fetch is in flight, abort the stale request.
-  // This prevents a slower response from overwriting data from a faster selection.
-  const selectAbortRef = useRef<AbortController | null>(null);
-
-  const reloadDepartments = useCallback(async () => {
-    setDepartmentsLoading(true);
-    setDepartmentsLoadError(null);
-    try {
-      setDepartments(await departmentService.getAll());
-    } catch (e) {
-      setDepartments([]);
-      setDepartmentsLoadError(e instanceof Error ? e.message : 'Failed to load departments');
-    } finally {
-      setDepartmentsLoading(false);
-    }
-  }, []);
-
-  // Load departments once an OWNER/ADMIN is signed in.
-  useEffect(() => {
-    if (userRole === 'OWNER' || userRole === 'ADMIN') {
-      reloadDepartments();
-    } else {
-      setDepartments([]);
-    }
-  }, [userRole, reloadDepartments]);
+  const departmentsQuery = useDepartmentsList();
+  const departments = departmentsQuery.data ?? [];
+  const departmentDetailQuery = useDepartmentDetail(selectedDeptId);
+  const deleteDepartment = useDeleteDepartment();
 
   const handleLoginSuccess = (user: MeUser) => {
     setCurrentScreen(user.adminProfile === null && !user.owner ? 'my-requests' : 'employees');
@@ -83,42 +60,15 @@ const App: React.FC = () => {
     setActiveModal(modal);
   };
 
-  // Open a department's detail view by fetching its full record from the API.
-  const handleSelectDepartment = async (dept: Department) => {
+  // Open a department's detail view; the useDepartmentDetail query fetches its full
+  // record. React Query cancels a superseded request when selectedDeptId changes.
+  const handleSelectDepartment = (dept: Department) => {
     if (!canAccessRoute('department-detail', userRole)) {
       setCurrentScreen('forbidden');
       return;
     }
-    selectAbortRef.current?.abort();
-    const controller = new AbortController();
-    selectAbortRef.current = controller;
-    setDepartmentError(null);
-    setDepartmentDetailLoading(true);
-    try {
-      const fresh = await departmentService.getById(dept.id, controller.signal);
-      setSelectedDepartment(fresh);
-      setCurrentScreen('department-detail');
-    } catch (e) {
-      if (controller.signal.aborted) return;
-      setDepartmentError(e instanceof Error ? e.message : 'Failed to load department');
-    } finally {
-      if (selectAbortRef.current === controller) {
-        setDepartmentDetailLoading(false);
-        selectAbortRef.current = null;
-      }
-    }
-  };
-
-  // After an edit (e.g. reassigning admins), refresh the open department and the list.
-  const refreshDepartments = async () => {
-    await reloadDepartments();
-    if (selectedDepartment) {
-      try {
-        setSelectedDepartment(await departmentService.getById(selectedDepartment.id));
-      } catch {
-        // Department may have been deleted/detached; leave the stale view in place.
-      }
-    }
+    setSelectedDeptId(dept.id);
+    setCurrentScreen('department-detail');
   };
 
   const handleOpenEmployeeProfile = (emp: Employee) => {
@@ -142,11 +92,11 @@ const App: React.FC = () => {
       />
 
       <main className="main-content-area">
-        {departmentError && (
-          <p className="form-error form-error-block">{departmentError}</p>
+        {departmentDetailQuery.error && (
+          <p className="form-error form-error-block">{departmentDetailQuery.error.message}</p>
         )}
-        {departmentsLoadError && (
-          <p className="form-error form-error-block">{departmentsLoadError}</p>
+        {departmentsQuery.error && (
+          <p className="form-error form-error-block">{departmentsQuery.error.message}</p>
         )}
         {currentScreen === 'employees' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
           <EmployeesScreen openEmployeeProfile={handleOpenEmployeeProfile} openModal={handleOpenModal} />
@@ -160,15 +110,15 @@ const App: React.FC = () => {
         {currentScreen === 'departments' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
           <DepartmentsScreen
             departments={departments}
-            loading={departmentsLoading}
+            loading={departmentsQuery.isLoading}
             openModal={handleOpenModal}
             onSelectDepartment={handleSelectDepartment}
           />
         )}
         {currentScreen === 'department-detail' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
           <DepartmentDetailScreen
-            department={selectedDepartment}
-            loading={departmentDetailLoading}
+            department={departmentDetailQuery.data ?? null}
+            loading={departmentDetailQuery.isLoading}
             openModal={handleOpenModal}
             onBack={() => handleSetScreen('departments')}
           />
@@ -194,20 +144,24 @@ const App: React.FC = () => {
             return;
           }
           if (activeModal === 'DELETE_DEPARTMENT' && selectedDepartment) {
-            try {
-              await departmentService.delete(selectedDepartment.id);
-              await reloadDepartments();
-              setActiveModal(null);
-              if (currentScreen === 'department-detail') {
-                setCurrentScreen('departments');
-              }
-            } catch {
-              setDeleteDepartmentError(
-                selectedDepartment.admins.length > 0
-                  ? 'This department still has administrators attached to it. Unassign all administrators before deleting.'
-                  : 'This department still has employees assigned to it. Unassign all employees before deleting.'
-              );
-            }
+            const dept = selectedDepartment;
+            deleteDepartment.mutate(dept.id, {
+              // The mutation invalidates the list, so no manual reload is needed.
+              onSuccess: () => {
+                setActiveModal(null);
+                if (currentScreen === 'department-detail') {
+                  setSelectedDeptId(null);
+                  setCurrentScreen('departments');
+                }
+              },
+              onError: () => {
+                setDeleteDepartmentError(
+                  dept.admins.length > 0
+                    ? 'This department still has administrators attached to it. Unassign all administrators before deleting.'
+                    : 'This department still has employees assigned to it. Unassign all employees before deleting.'
+                );
+              },
+            });
             return;
           }
           setActiveModal(null);
@@ -217,7 +171,6 @@ const App: React.FC = () => {
         selectedRequest={selectedRequest}
         selectedDepartment={selectedDepartment}
         departments={departments}
-        onDepartmentsChanged={refreshDepartments}
         confirmError={deleteDepartmentError}
         onConfirmErrorClear={() => setDeleteDepartmentError(null)}
       />

@@ -18,14 +18,13 @@ interface Props {
   selectedRequest: LeaveRequest | null;
   selectedDepartment: Department | null;
   departments: Department[];
-  onDepartmentsChanged: () => void | Promise<void>;
   confirmError?: string | null;
   onConfirmErrorClear?: () => void;
 }
 
 const CONFIRM_MODALS: ModalType[] = ['DELETE_EMPLOYEE', 'DELETE_LEAVE', 'CANCEL_LEAVE', 'DELETE_DEPARTMENT', 'LOGOUT', 'CHANGE_PASSWORD'];
 
-const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment, departments, onDepartmentsChanged, confirmError, onConfirmErrorClear }) => {
+const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment, departments, confirmError, onConfirmErrorClear }) => {
   if (!activeModal) return null;
 
   return (
@@ -56,7 +55,6 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
             activeModal={activeModal}
             closeModal={closeModal}
             selectedDepartment={selectedDepartment}
-            onDepartmentsChanged={onDepartmentsChanged}
           />
         )}
 
@@ -77,7 +75,7 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
         )}
 
         {activeModal === 'ADD_DEPARTMENT' && (
-          <AddDepartmentModal closeModal={closeModal} onDepartmentsChanged={onDepartmentsChanged} />
+          <AddDepartmentModal closeModal={closeModal} />
         )}
       </div>
     </div>

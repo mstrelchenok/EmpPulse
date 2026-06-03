@@ -1,24 +1,35 @@
 import type { MeUser, Department, DepartmentAdmin } from '../types';
 
+// Carries the HTTP status so callers (e.g. the React Query retry predicate) can
+// distinguish client (4xx) from server/network errors without parsing messages.
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
 async function clientSafeError(
   res: Response,
   fallback: string,
   overrides: Record<number, string> = {},
-): Promise<Error> {
-  if (overrides[res.status]) return new Error(overrides[res.status]);
+): Promise<ApiError> {
+  if (overrides[res.status]) return new ApiError(res.status, overrides[res.status]);
   switch (res.status) {
     case 400:
-      return new Error('The request was invalid. Please check your input and try again.');
+      return new ApiError(res.status, 'The request was invalid. Please check your input and try again.');
     case 401:
-      return new Error('Your session has expired. Please sign in again.');
+      return new ApiError(res.status, 'Your session has expired. Please sign in again.');
     case 403:
-      return new Error('You do not have permission to perform this action.');
+      return new ApiError(res.status, 'You do not have permission to perform this action.');
     case 404:
-      return new Error('The requested item could not be found.');
+      return new ApiError(res.status, 'The requested item could not be found.');
     case 409:
-      return new Error('This action conflicts with the current state. Please refresh and retry.');
+      return new ApiError(res.status, 'This action conflicts with the current state. Please refresh and retry.');
     default:
-      return new Error(fallback);
+      return new ApiError(res.status, fallback);
   }
 }
 

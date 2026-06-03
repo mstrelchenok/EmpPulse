@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { ModalType, Department } from '../../types';
-import { userService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useCreateUser } from '../../hooks/useCreateUser';
 
 interface Props {
   activeModal: ModalType;
@@ -33,7 +33,7 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
   const [employeeDeptId, setEmployeeDeptId] = useState<number | null>(null);
   const [adminDeptId, setAdminDeptId] = useState<number | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
-  const [creating, setCreating] = useState(false);
+  const createUser = useCreateUser();
 
   const resetCreateUserForm = () => {
     setNewName(''); setNewSurname(''); setNewEmail(''); setNewPassword('');
@@ -41,7 +41,7 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
     setCreateError(null);
   };
 
-  const handleCreateUser = async () => {
+  const handleCreateUser = () => {
     setCreateError(null);
     if (!newName.trim() || !newSurname.trim() || !newEmail.trim() || !newPassword) {
       setCreateError('Name, surname, email and password are required.');
@@ -62,9 +62,8 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
       return;
     }
 
-    setCreating(true);
-    try {
-      await userService.create({
+    createUser.mutate(
+      {
         name: newName.trim(),
         surname: newSurname.trim(),
         email: newEmail.trim(),
@@ -72,14 +71,14 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
         ...(isEmployeeChecked ? { employeeDepartmentId: employeeDeptId, yearlyVacationBalance: 0 } : {}),
         // undefined = no admin role; array = admin assigned to the chosen department
         adminDepartmentIds: isAdminChecked && adminDeptId !== null ? [adminDeptId] : undefined,
-      });
-      resetCreateUserForm();
-      closeModal();
-    } catch (e) {
-      setCreateError(e instanceof Error ? e.message : 'Failed to create user');
-    } finally {
-      setCreating(false);
-    }
+      },
+      {
+        onSuccess: () => {
+          resetCreateUserForm();
+          closeModal();
+        },
+      },
+    );
   };
 
   return (
@@ -139,9 +138,11 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
         <p className="form-error">No departments exist yet. Create a department before adding users.</p>
       )}
 
-      {createError && <p className="form-error">{createError}</p>}
+      {(createError || createUser.error) && (
+        <p className="form-error">{createError ?? createUser.error?.message}</p>
+      )}
 
-      <button className="primary-btn full-width" onClick={handleCreateUser} disabled={creating || departments.length === 0}>
+      <button className="primary-btn full-width" onClick={handleCreateUser} disabled={createUser.isPending || departments.length === 0}>
         + add employee
       </button>
     </div>

@@ -1,34 +1,27 @@
 import React, { useState } from 'react';
 import type { ModalType, Department } from '../../types';
-import type { DepartmentAdmin } from '../../types';
-import { departmentService, adminService } from '../../services/api';
+import { useAdmins } from '../../hooks/useAdmins';
+import { useUpdateDepartment } from '../../hooks/useDepartmentMutations';
 
 interface Props {
   activeModal: ModalType;
   closeModal: () => void;
   selectedDepartment: Department | null;
-  onDepartmentsChanged: () => void | Promise<void>;
 }
 
-const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDepartment, onDepartmentsChanged }) => {
+const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDepartment }) => {
   // Working set of admin ids (Admin.id) assigned to the selected department.
   const [editAdminIds, setEditAdminIds] = useState<number[]>([]);
-  const [allAdmins, setAllAdmins] = useState<DepartmentAdmin[]>([]);
   const [adminsError, setAdminsError] = useState<string | null>(null);
-  const [savingAdmins, setSavingAdmins] = useState(false);
+  const adminsQuery = useAdmins(!!selectedDepartment);
+  const allAdmins = adminsQuery.data ?? [];
+  const updateDept = useUpdateDepartment();
 
-  // When the Edit Administrators modal opens, seed the working set and load all admins.
+  // Seed the working set from the selected department when the modal opens.
   React.useEffect(() => {
     if (activeModal === 'EDIT_ADMINS' && selectedDepartment) {
       setEditAdminIds(selectedDepartment.admins.map(a => a.id));
       setAdminsError(null);
-      // Guard against a late response landing after the modal closed or switched
-      // to a different department, which would show the wrong candidate list.
-      let cancelled = false;
-      adminService.getAll()
-        .then(admins => { if (!cancelled) setAllAdmins(admins); })
-        .catch(() => { if (!cancelled) setAllAdmins([]); });
-      return () => { cancelled = true; };
     }
   }, [activeModal, selectedDepartment]);
 
@@ -47,7 +40,7 @@ const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDep
     return !!admin && admin.departmentIds.length <= 1;
   };
 
-  const handleSaveAdmins = async () => {
+  const handleSaveAdmins = () => {
     if (!selectedDepartment) return;
 
     // Run all checks on submit: collect every removed admin who'd be left with no department.
@@ -64,16 +57,11 @@ const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDep
     }
 
     setAdminsError(null);
-    setSavingAdmins(true);
-    try {
-      await departmentService.update(selectedDepartment.id, { adminIds: editAdminIds });
-      await onDepartmentsChanged();
-      closeModal();
-    } catch (e) {
-      setAdminsError(e instanceof Error ? e.message : 'Failed to update administrators');
-    } finally {
-      setSavingAdmins(false);
-    }
+    // The mutation invalidates both the list and this department's detail.
+    updateDept.mutate(
+      { id: selectedDepartment.id, payload: { adminIds: editAdminIds } },
+      { onSuccess: () => closeModal() },
+    );
   };
 
   return (
@@ -117,9 +105,11 @@ const EditAdminsModal: React.FC<Props> = ({ activeModal, closeModal, selectedDep
         </select>
       </label>
 
-      {adminsError && <p className="form-error">{adminsError}</p>}
+      {(adminsError || updateDept.error) && (
+        <p className="form-error">{adminsError ?? updateDept.error?.message}</p>
+      )}
 
-      <button className="primary-btn full-width edit-admins-save-btn" onClick={handleSaveAdmins} disabled={savingAdmins}>
+      <button className="primary-btn full-width edit-admins-save-btn" onClick={handleSaveAdmins} disabled={updateDept.isPending}>
         save administrators
       </button>
     </div>

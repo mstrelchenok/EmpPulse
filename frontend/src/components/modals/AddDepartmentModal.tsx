@@ -1,33 +1,23 @@
 import React, { useState } from 'react';
-import { departmentService } from '../../services/api';
+import { useCreateDepartment } from '../../hooks/useDepartmentMutations';
 
 interface Props {
   closeModal: () => void;
-  onDepartmentsChanged: () => void | Promise<void>;
 }
 
-const AddDepartmentModal: React.FC<Props> = ({ closeModal, onDepartmentsChanged }) => {
+const AddDepartmentModal: React.FC<Props> = ({ closeModal }) => {
   const [deptName, setDeptName] = useState('');
-  const [deptError, setDeptError] = useState<string | null>(null);
-  const [deptCreating, setDeptCreating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const createDept = useCreateDepartment();
 
-  const handleCreateDepartment = async () => {
-    setDeptError(null);
+  const handleCreateDepartment = () => {
+    setValidationError(null);
     if (!deptName.trim()) {
-      setDeptError('Department name is required.');
+      setValidationError('Department name is required.');
       return;
     }
-    setDeptCreating(true);
-    try {
-      await departmentService.create({ name: deptName.trim() });
-      setDeptName('');
-      await onDepartmentsChanged();
-      closeModal();
-    } catch (e) {
-      setDeptError(e instanceof Error ? e.message : 'Failed to create department');
-    } finally {
-      setDeptCreating(false);
-    }
+    // The mutation invalidates the departments list, so the parent refreshes automatically.
+    createDept.mutate({ name: deptName.trim() }, { onSuccess: () => closeModal() });
   };
 
   return (
@@ -41,8 +31,10 @@ const AddDepartmentModal: React.FC<Props> = ({ closeModal, onDepartmentsChanged 
           onChange={(e) => setDeptName(e.target.value)}
         />
       </label>
-      {deptError && <p className="form-error">{deptError}</p>}
-      <button className="primary-btn full-width" onClick={handleCreateDepartment} disabled={deptCreating}>
+      {(validationError || createDept.error) && (
+        <p className="form-error">{validationError ?? createDept.error?.message}</p>
+      )}
+      <button className="primary-btn full-width" onClick={handleCreateDepartment} disabled={createDept.isPending}>
         + add department
       </button>
     </div>
