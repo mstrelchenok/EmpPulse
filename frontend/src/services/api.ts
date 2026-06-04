@@ -1,4 +1,4 @@
-import type { MeUser, Department, DepartmentAdmin } from '../types';
+import type { MeUser, Department, DepartmentAdmin, Employee } from '../types';
 
 // Carries the HTTP status so callers (e.g. the React Query retry predicate) can
 // distinguish client (4xx) from server/network errors without parsing messages.
@@ -82,10 +82,32 @@ export const userService = {
   },
 };
 
+// Raw item shape from GET /api/employees (EmployeeSummaryResponse).
+interface EmployeeSummaryDto {
+  id: number;
+  name: string;
+  surname: string;
+  departmentId: number | null;
+  departmentName: string | null;
+}
+
 export const employeeService = {
-  getAll: async () => { throw new Error('Not implemented'); },
-  create: async (_data: unknown) => { throw new Error('Not implemented'); },
-  delete: async (_id: string) => { throw new Error('Not implemented'); },
+  // GET /api/employees (OWNER lists all; ADMIN receives only employees in their
+  // departments — filtered server-side). Mapped into the app's Employee shape;
+  // the API summary carries no leave/status data, so those fields stay absent.
+  getAll: async (): Promise<Employee[]> => {
+    const res = await fetch('/api/employees', { credentials: 'include' });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to load employees.');
+    }
+    const data = await res.json();
+    const items = (data.items ?? []) as EmployeeSummaryDto[];
+    return items.map((e) => ({
+      id: String(e.id),
+      name: `${e.name} ${e.surname}`.trim(),
+      department: e.departmentName ?? undefined,
+    }));
+  },
 };
 
 export const leaveRequestService = {

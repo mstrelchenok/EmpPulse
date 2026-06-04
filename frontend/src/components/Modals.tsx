@@ -3,7 +3,6 @@ import type { ModalType, Employee, LeaveRequest, Department } from '../types';
 import ConfirmModal from './modals/ConfirmModal';
 import AddEmployeeModal from './modals/AddEmployeeModal';
 import EditAdminsModal from './modals/EditAdminsModal';
-import AddUnassignedModal from './modals/AddUnassignedModal';
 import LogHoursModal from './modals/LogHoursModal';
 import LeaveModal from './modals/LeaveModal';
 import AcceptRequestModal from './modals/AcceptRequestModal';
@@ -56,10 +55,6 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
             closeModal={closeModal}
             selectedDepartment={selectedDepartment}
           />
-        )}
-
-        {activeModal === 'ADD_UNASSIGNED' && (
-          <AddUnassignedModal closeModal={closeModal} selectedEmployee={selectedEmployee} />
         )}
 
         {activeModal === 'LOG_HOURS' && (
