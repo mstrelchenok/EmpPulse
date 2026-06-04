@@ -74,6 +74,20 @@ public class UserService {
     }
 
     @Transactional
+    public void softDeleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .filter(u -> !u.isDeleted())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (UserRole.OWNER.equals(user.getRole())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Owner cannot be deleted");
+        }
+
+        user.setDeleted(true);
+        userRepository.save(user);
+    }
+
+    @Transactional
     public void createUser(UserCreateRequest req, String callerRole) {
         // null = no admin role; empty list = admin with no department assignments yet
         boolean wantsAdmin = req.getAdminDepartmentIds() != null;

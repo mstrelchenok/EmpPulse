@@ -40,6 +40,16 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
+    @DeleteMapping("/api/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId, HttpServletRequest request) {
+        if (!"OWNER".equals(getSessionRole(request))) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("code", "FORBIDDEN", "message", "Access denied"));
+        }
+        userService.softDeleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
     private Long getSessionUserId(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) return null;

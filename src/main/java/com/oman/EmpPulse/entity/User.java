@@ -36,6 +36,9 @@ public class User {
     @ColumnTransformer(write = "?::role")
     private UserRole role;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
+
     public User() {}
 
     public User(String name, String surname, String email, String passHash, String theme, String language, UserRole role) {
@@ -71,4 +74,7 @@ public class User {
     
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }
+
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean deleted) { this.isDeleted = deleted; }
 }

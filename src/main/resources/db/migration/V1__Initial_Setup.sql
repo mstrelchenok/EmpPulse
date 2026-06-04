@@ -35,7 +35,8 @@ CREATE TABLE "User" (
   "pass_hash" text NOT NULL,
   "theme" theme NOT NULL,
   "language" language NOT NULL,
-  "role" role NOT NULL
+  "role" role NOT NULL,
+  "is_deleted" boolean NOT NULL DEFAULT false
 );
 
 CREATE TABLE "Worker" (

@@ -33,13 +33,18 @@ public class AdminService {
     public AdminListResponse getAllAdmins() {
         List<AdminSummaryResponse> items = adminRepository.findAll().stream()
                 .map(this::toAdminSummaryResponse)
+                .filter(java.util.Objects::nonNull)
                 .toList();
         return new AdminListResponse(items);
     }
 
+    /** Returns null when the admin's user has been soft-deleted, so callers can filter it out. */
     private AdminSummaryResponse toAdminSummaryResponse(Admin admin) {
         User user = userRepository.findById(admin.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Data inconsistency"));
+        if (user.isDeleted()) {
+            return null;
+        }
         List<Long> deptIds = adminDepartmentRepository.findByAdminId(admin.getId())
                 .stream().map(AdminDepartment::getDepartmentId).toList();
         return new AdminSummaryResponse(admin.getId(),
