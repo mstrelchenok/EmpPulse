@@ -16,6 +16,7 @@ import { useAuth } from './context/AuthContext';
 import { useDepartmentsList } from './hooks/useDepartmentsList';
 import { useDepartmentDetail } from './hooks/useDepartmentDetail';
 import { useDeleteDepartment } from './hooks/useDepartmentMutations';
+import '@fontsource/poppins';
 import './styles/global.css';
 
 const App: React.FC = () => {
@@ -124,10 +125,10 @@ const App: React.FC = () => {
           />
         )}
         {currentScreen === 'my-profile' && (
-          <ProfileScreen isMyProfile={true} openModal={handleOpenModal} />
+          <ProfileScreen isMyProfile={true} openModal={handleOpenModal} onBack={() => handleSetScreen('employees')} />
         )}
         {currentScreen === 'employee-profile' && userRole && ['OWNER', 'ADMIN'].includes(userRole) && (
-          <ProfileScreen isMyProfile={false} employee={selectedEmployee} openModal={handleOpenModal} />
+          <ProfileScreen isMyProfile={false} employee={selectedEmployee} openModal={handleOpenModal} onBack={() => handleSetScreen('employees')}/>
         )}
       </main>
 

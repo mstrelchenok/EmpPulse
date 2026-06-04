@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
 import { MOCK_LOGGED_HOURS } from '../utils/mockData';
 import { useAuth } from '../context/AuthContext';
+import blackTriangleIcon from '../assets/black_triangle.png';
 
 interface Props {
   isMyProfile?: boolean;
   employee?: Employee | null;
   openModal: (modal: ModalType, emp?: Employee, requestObj?: LeaveRequest) => void;
+  onBack: () => void;
 }
 
-const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
+const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal, onBack }) => {
   const { currentUser } = useAuth();
   const [loggedExpanded, setLoggedExpanded] = useState(true);
   const [unpaidExpanded, setUnpaidExpanded] = useState(true);
@@ -23,6 +25,10 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
 
   return (
     <div className="screen-container">
+      <button className="btn-pill-secondary" onClick={onBack}><img 
+            src={blackTriangleIcon} 
+            alt="Back to employees list"
+          /></button>
       <header className="page-header profile-header">
         <h2>{isMyProfile ? 'My Profile' : "Employee's Profile"}</h2>
         {isMyProfile && (

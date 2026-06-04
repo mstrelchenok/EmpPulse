@@ -8,6 +8,7 @@ import LogHoursModal from './modals/LogHoursModal';
 import LeaveModal from './modals/LeaveModal';
 import AcceptRequestModal from './modals/AcceptRequestModal';
 import AddDepartmentModal from './modals/AddDepartmentModal';
+import EditDepartmentModal from './modals/EditDepartmentModal';
 
 interface Props {
   activeModal: ModalType;
@@ -76,6 +77,13 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
 
         {activeModal === 'ADD_DEPARTMENT' && (
           <AddDepartmentModal closeModal={closeModal} />
+        )}
+
+        {activeModal === 'EDIT_DEPARTMENT' && (
+          <EditDepartmentModal 
+            closeModal={closeModal} 
+            selectedDepartment={selectedDepartment} 
+          />
         )}
       </div>
     </div>

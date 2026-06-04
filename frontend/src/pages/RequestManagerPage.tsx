@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
 import { PENDING_REQUESTS } from '../utils/mockData';
+import blackTriangleIcon from '../assets/black_triangle.png';
 
 interface Props {
   openModal: (modal: ModalType, emp?: Employee, requestObj?: LeaveRequest) => void;
@@ -18,7 +19,12 @@ const RequestManagerPage: React.FC<Props> = ({ openModal }) => {
 
       <div className="accordion-section">
         <h3 className="department-title" onClick={() => setExpanded(!expanded)}>
-          Pending Requests <span className={`chevron ${expanded ? 'expanded' : ''}`}>►</span>
+          Pending Requests 
+          <img 
+            src={blackTriangleIcon} 
+            alt="Toggle pending requests" 
+          className={`chevron ${expanded ? 'expanded' : ''}`} 
+          />
         </h3>
 
         {expanded && (

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
 import trashIcon from '../assets/trash-icon.png.webp';
+import blackTriangleIcon from '../assets/black_triangle.png';
 import { DEPARTMENT_EMPLOYEES, UNASSIGNED_EMPLOYEES } from '../utils/mockData';
 
 interface Props {
@@ -25,7 +26,11 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
       <div className="accordion-section">
         <h3 className="department-title" onClick={() => setDept1Expanded(!dept1Expanded)}>
           Department 1
-          <span className={`chevron ${dept1Expanded ? 'expanded' : ''}`}>►</span>
+          <img 
+            src={blackTriangleIcon} 
+            alt="Toggle department" 
+            className={`chevron ${dept1Expanded ? 'expanded' : ''}`} 
+          />
         </h3>
 
         {dept1Expanded && (
@@ -59,7 +64,11 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
       <div className="accordion-section">
         <h3 className="department-title" onClick={() => setUnassignedExpanded(!unassignedExpanded)}>
           Non-assigned department
-          <span className={`chevron ${unassignedExpanded ? 'expanded' : ''}`}>►</span>
+          <img 
+            src={blackTriangleIcon} 
+            alt="Toggle department" 
+            className={`chevron ${dept1Expanded ? 'expanded' : ''}`} 
+          />
         </h3>
 
         {unassignedExpanded && (

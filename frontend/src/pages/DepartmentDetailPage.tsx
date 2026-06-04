@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Department, ModalType } from '../types';
 import { useAuth } from '../context/AuthContext';
+import blackTriangleIcon from '../assets/black_triangle.png';
+import EditIcon from '../assets/edit_icon.png';
 
 interface Props {
   department: Department | null;
@@ -40,8 +42,25 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
     <div className="screen-container department-detail-screen">
       <header className="page-header">
         <div className="department-detail-title">
-          <button className="btn-pill-secondary" onClick={onBack}>►</button>
-          <h2>{department.name}</h2>
+          <button className="btn-pill-secondary" onClick={onBack}><img 
+            src={blackTriangleIcon} 
+            alt="Back to departments list"
+          /></button>
+          <div className="department-detail-title_row">
+            <h2>{department.name}</h2>
+            {isOwner && (
+              <button 
+                className="btn-edit-action" 
+                onClick={() => openModal('EDIT_DEPARTMENT', department)}
+                style={{ marginLeft: '12px' }}
+              >
+                <img 
+                  src={EditIcon} 
+                  alt="Edit department name"
+              />
+              </button>
+            )}
+          </div>
         </div>
         <div className="header-actions">
           <div className="search-bar"><input type="text" placeholder="Search" /></div>
