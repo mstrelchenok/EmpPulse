@@ -12,7 +12,7 @@ interface Props {
 const ConfirmModal: React.FC<Props> = ({ activeModal, closeModal, confirmModal, confirmError, onConfirmErrorClear }) => (
   <div className="modal-confirm">
     <h3>
-      {activeModal === 'DELETE_EMPLOYEE' && 'Do you really want to delete employee from department?'}
+      {activeModal === 'DELETE_EMPLOYEE' && 'Do you really want to delete employee?'}
       {activeModal === 'DELETE_LEAVE' && 'Do you really want to delete a leave?'}
       {activeModal === 'CANCEL_LEAVE' && 'Do you really want to cancel a leave?'}
       {activeModal === 'DELETE_DEPARTMENT' && 'Do you really want to delete a department?'}

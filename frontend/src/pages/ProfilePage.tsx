@@ -18,10 +18,10 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal, onBack
 
   const targetName = isMyProfile
     ? [currentUser?.name, currentUser?.surname].filter(Boolean).join(' ')
-    : employee?.name || 'Andrei Didenko';
+    : [employee?.name, employee?.surname].filter(Boolean).join(' ') || 'Fallback Name';
   const targetEmail = isMyProfile
     ? currentUser?.email ?? ''
-    : employee?.email || 'andrei.didenko@email.com';
+    : employee?.email || 'fallback_email@emppulse.com';
 
   return (
     <div className="screen-container">

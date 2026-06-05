@@ -8,7 +8,6 @@ public class EmployeeProfileResponse {
     private String departmentName;
     private int yearlyVacationBalance;
     private List<Object> premiumVacationDays;
-    private boolean active;
 
     public EmployeeProfileResponse(Long employeeId, Long departmentId, String departmentName,
                                    int yearlyVacationBalance) {
@@ -17,7 +16,6 @@ public class EmployeeProfileResponse {
         this.departmentName = departmentName;
         this.yearlyVacationBalance = yearlyVacationBalance;
         this.premiumVacationDays = List.of();
-        this.active = true;
     }
 
     public Long getEmployeeId() { return employeeId; }
@@ -25,5 +23,4 @@ public class EmployeeProfileResponse {
     public String getDepartmentName() { return departmentName; }
     public int getYearlyVacationBalance() { return yearlyVacationBalance; }
     public List<Object> getPremiumVacationDays() { return premiumVacationDays; }
-    public boolean isActive() { return active; }
 }

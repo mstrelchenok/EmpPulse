@@ -159,12 +159,16 @@ public class DepartmentService {
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Data inconsistency"));
                     User user = userRepository.findById(admin.getUserId())
                             .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Data inconsistency"));
+                    if (user.isDeleted()) {
+                        return null;
+                    }
                     List<Long> deptIds = adminDepartmentRepository.findByAdminId(admin.getId())
                             .stream().map(AdminDepartment::getDepartmentId).toList();
                     return new AdminSummaryResponse(admin.getId(),
                             new UserSummaryResponse(user.getId(), user.getName(), user.getSurname(), user.getEmail()),
                             deptIds);
                 })
+                .filter(java.util.Objects::nonNull)
                 .toList();
         return new DepartmentResponse(department.getId(), department.getName(), admins);
     }

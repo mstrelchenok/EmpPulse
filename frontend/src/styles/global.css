@@ -33,7 +33,7 @@ input, button, textarea, select {
    ============================================================ */
 .sidebar {
   width: 260px;
-  background-color: #ffffff;
+  background-color: #fff;
   padding: 32px 20px;
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@ input, button, textarea, select {
 
 .nav-item.active {
   background-color: #5932EA;
-  color: #ffffff;
+  color: #fff;
 }
 
 /* User profile card at the bottom of the sidebar */
@@ -191,7 +191,7 @@ input, button, textarea, select {
 }
 
 .search-bar {
-  background-color: #EEEEEE;
+  background-color: #EEE;
   padding: 8px 16px;
   border-radius: 8px;
   display: flex;
@@ -208,7 +208,7 @@ input, button, textarea, select {
 }
 
 .filter-dropdown {
-  background-color: #EEEEEE;
+  background-color: #EEE;
   padding: 8px 16px;
   border-radius: 8px;
   display: flex;
@@ -257,10 +257,10 @@ input, button, textarea, select {
 
 /* White card wrapper for list sections */
 .card-box {
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 20px rgb(0 0 0 / 2%);
 }
 
 .list-box {
@@ -444,7 +444,7 @@ input, button, textarea, select {
 }
 
 .btn-pill-action {
-  background-color: #ffffff;
+  background-color: #fff;
   color: #5932EA;
   border: none;
   padding: 6px 16px;
@@ -495,13 +495,13 @@ input, button, textarea, select {
 /* Compact vacation balance card on the right */
 .vacation-widget {
   width: 240px;
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 16px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 20px rgb(0 0 0 / 2%);
 }
 
 .vacation-widget h4 {
@@ -625,7 +625,7 @@ input, button, textarea, select {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0,0,0,0.6);
+  background-color: rgb(0 0 0 / 60%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -637,11 +637,11 @@ input, button, textarea, select {
 .modal-container {
   width: 100%;
   max-width: 420px;
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 16px;
   padding: 32px 24px;
   position: relative;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgb(0 0 0 / 20%);
 }
 
 .modal-close {
@@ -738,7 +738,7 @@ input, button, textarea, select {
   text-align: center;
   padding: 4px;
   border-radius: 12px;
-  margin: -8px 0 16px 0;
+  margin: -8px 0 16px;
 }
 
 /* Request detail summary shown in the accept-request modal */
@@ -906,12 +906,12 @@ input, button, textarea, select {
 
 /* Rounded white container card with inner padding and drop shadow */
 .auth-card {
-  background-color: #ffffff;
+  background-color: #fff;
   width: 100%;
   max-width: 420px;
   padding: 48px 40px;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 5%);
   text-align: center;
   border: 1px solid #E5E7EB;
 }

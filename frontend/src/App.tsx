@@ -17,6 +17,7 @@ import { useDepartmentsList } from './hooks/useDepartmentsList';
 import { useDepartmentDetail } from './hooks/useDepartmentDetail';
 import { useDeleteDepartment } from './hooks/useDepartmentMutations';
 import '@fontsource/poppins';
+import { useDeleteEmployee } from './hooks/useEmployeeMutations';
 import './styles/global.css';
 
 const App: React.FC = () => {
@@ -30,12 +31,15 @@ const App: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   // Id of the department whose detail view is open; drives the detail query.
   const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
-  const [deleteDepartmentError, setDeleteDepartmentError] = useState<string | null>(null);
+  // Error surfaced inside the confirm modal when a confirm action fails (delete
+  // employee/department). Cleared on close and when the action is re-attempted.
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const departmentsQuery = useDepartmentsList();
   const departments = departmentsQuery.data ?? [];
   const departmentDetailQuery = useDepartmentDetail(selectedDeptId);
   const deleteDepartment = useDeleteDepartment();
+  const deleteEmployee = useDeleteEmployee();
 
   const handleLoginSuccess = (user: MeUser) => {
     setCurrentScreen(user.adminProfile === null && !user.owner ? 'my-requests' : 'employees');
@@ -144,6 +148,18 @@ const App: React.FC = () => {
             setActiveModal(null);
             return;
           }
+          if (activeModal === 'DELETE_EMPLOYEE' && selectedEmployee) {
+            deleteEmployee.mutate(Number(selectedEmployee.id), {
+              onSuccess: () => {
+                setActiveModal(null);
+                if (currentScreen === 'employee-profile') {
+                  setCurrentScreen('employees');
+                }
+              },
+              onError: (err) => setConfirmError(err.message),
+            });
+            return;
+          }
           if (activeModal === 'DELETE_DEPARTMENT' && selectedDepartment) {
             const dept = selectedDepartment;
             deleteDepartment.mutate(dept.id, {
@@ -156,7 +172,7 @@ const App: React.FC = () => {
                 }
               },
               onError: () => {
-                setDeleteDepartmentError(
+                setConfirmError(
                   dept.admins.length > 0
                     ? 'This department still has administrators attached to it. Unassign all administrators before deleting.'
                     : 'This department still has employees assigned to it. Unassign all employees before deleting.'
@@ -167,13 +183,13 @@ const App: React.FC = () => {
           }
           setActiveModal(null);
         }}
-        closeModal={() => { setDeleteDepartmentError(null); setActiveModal(null); }}
+        closeModal={() => { setConfirmError(null); setActiveModal(null); }}
         selectedEmployee={selectedEmployee}
         selectedRequest={selectedRequest}
         selectedDepartment={selectedDepartment}
         departments={departments}
-        confirmError={deleteDepartmentError}
-        onConfirmErrorClear={() => setDeleteDepartmentError(null)}
+        confirmError={confirmError}
+        onConfirmErrorClear={() => setConfirmError(null)}
       />
     </div>
   );

@@ -79,7 +79,7 @@ export type ScreenType =
 
 export type ModalType = 
   | null 
-  | 'ADD_EMPLOYEE' | 'ADD_UNASSIGNED' | 'DELETE_EMPLOYEE'
+  | 'ADD_EMPLOYEE' | 'DELETE_EMPLOYEE'
   | 'LOG_HOURS'
   | 'ADD_DEPARTMENT' 
   | 'DELETE_DEPARTMENT'

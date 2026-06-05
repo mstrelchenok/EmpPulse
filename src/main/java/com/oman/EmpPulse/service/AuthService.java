@@ -19,7 +19,7 @@ public class AuthService {
     }
 
     public Optional<User> authenticate(String email, String password) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<User> userOpt = userRepository.findByEmailAndIsDeletedFalse(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
             if (passwordEncoder.matches(password, user.getPassHash())) {

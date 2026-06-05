@@ -1,15 +1,4 @@
-import type { Employee, LeaveRequest } from '../types';
-
-export const DEPARTMENT_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Andrei Didenko', email: 'andrei.didenko@email.com', department: 'Department 1', role: 'Administrator', status: 'Working' },
-  { id: '2', name: 'Oleksandr Lypiatskyi', status: 'Personal', untilDate: '30.05.2026' },
-  { id: '3', name: 'Nazar Bezmenov', status: 'Sick', untilDate: '21.05.2026' },
-  { id: '4', name: 'Maryia Stralchonak', status: 'Vacation', untilDate: '18.05.2026' },
-];
-
-export const UNASSIGNED_EMPLOYEES: Employee[] = [
-  { id: '5', name: 'Milana Ronchyk' },
-];
+import type { LeaveRequest } from '../types';
 
 export const PENDING_REQUESTS: LeaveRequest[] = [
   { id: '1', employeeName: 'Nazar Bezmenov', type: 'Sick', dateRange: '20.05.2026 - 21.05.2026', status: 'PENDING' },

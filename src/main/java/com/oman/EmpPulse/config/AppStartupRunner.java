@@ -3,6 +3,8 @@ package com.oman.EmpPulse.config;
 import com.oman.EmpPulse.entity.Admin;
 import com.oman.EmpPulse.entity.User;
 import com.oman.EmpPulse.entity.UserRole;
+import com.oman.EmpPulse.entity.UserTheme;
+import com.oman.EmpPulse.entity.UserLanguage;
 import com.oman.EmpPulse.repository.AdminRepository;
 import com.oman.EmpPulse.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,8 +45,8 @@ public class AppStartupRunner implements CommandLineRunner {
         user.setSurname(surname);
         user.setEmail(email);
         user.setPassHash(passwordEncoder.encode(password));
-        user.setTheme("LIGHT");
-        user.setLanguage("ENG");
+        user.setTheme(UserTheme.LIGHT);
+        user.setLanguage(UserLanguage.ENG);
         user.setRole(role);
         userRepository.save(user);
         if (createAdminEntity) {
