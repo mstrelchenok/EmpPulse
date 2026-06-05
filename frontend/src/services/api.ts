@@ -116,7 +116,8 @@ export const employeeService = {
     const items = (data.items ?? []) as EmployeeSummaryDto[];
     return items.map((e) => ({
       id: String(e.id),
-      name: `${e.name} ${e.surname}`.trim(),
+      name: e.name,
+      surname: e.surname,
       department: e.departmentName ?? undefined,
     }));
   },

@@ -58,7 +58,7 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
                     className="employee-row hover-slide-container"
                     onClick={() => openEmployeeProfile(emp)}
                   >
-                    <span className="emp-name">{emp.name}</span>
+                    <span className="emp-name">{[emp.name, emp.surname].filter(Boolean).join(' ')}</span>
                     <div className="emp-meta">
                       {/*
                         HIDDEN FOR NOW: leave status badge + "until" date.

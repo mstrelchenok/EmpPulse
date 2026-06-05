@@ -25,6 +25,7 @@ export interface Department {
 export interface Employee {
   id: string;
   name: string;
+  surname?: string;
   email?: string;
   department?: string;
   role?: string;
