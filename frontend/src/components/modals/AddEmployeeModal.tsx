@@ -7,9 +7,10 @@ interface Props {
   activeModal: ModalType;
   closeModal: () => void;
   departments: Department[];
+  openModal: (modal: ModalType, payload?: any) => void;
 }
 
-const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, departments }) => {
+const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, departments, openModal }) => {
   const { userRole } = useAuth();
   // An admin can only ever create plain employees (no admin accounts, no role choice).
   const isAdminCreator = userRole === 'ADMIN';
@@ -90,10 +91,20 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
       <label>Email<input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} /></label>
       <label>Password<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></label>
 
+      {/* 1. EMPLOYEE CHECKBOX (Fixed with inline styles) */}
       {!isAdminCreator && (
-        <div className="checkbox-header" onClick={() => setIsEmployeeChecked(!isEmployeeChecked)}>
-          <h3>Employee</h3>
-          <div className={`custom-checkbox ${isEmployeeChecked ? 'checked' : ''}`} />
+        <div 
+          onClick={() => setIsEmployeeChecked(!isEmployeeChecked)}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}
+        >
+          <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: '#000' }}>Employee</h3>
+          <div style={{
+            width: '24px', height: '24px', border: '2px solid #5932EA', borderRadius: '4px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#5932EA', fontSize: '16px', fontWeight: 'bold', transition: 'all 0.1s ease'
+          }}>
+            {isEmployeeChecked ? '✕' : ''}
+          </div>
         </div>
       )}
 
@@ -111,11 +122,21 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
         </label>
       )}
 
+      {/* 2. ADMINISTRATOR CHECKBOX (Fixed with inline styles) */}
       {!isAdminCreator && (
         <>
-          <div className="checkbox-header" onClick={() => setIsAdminChecked(!isAdminChecked)}>
-            <h3>Administrator</h3>
-            <div className={`custom-checkbox ${isAdminChecked ? 'checked' : ''}`} />
+          <div 
+            onClick={() => setIsAdminChecked(!isAdminChecked)}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: '#000' }}>Administrator</h3>
+            <div style={{
+              width: '24px', height: '24px', border: '2px solid #5932EA', borderRadius: '4px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#5932EA', fontSize: '16px', fontWeight: 'bold', transition: 'all 0.1s ease'
+            }}>
+              {isAdminChecked ? '✕' : ''}
+            </div>
           </div>
 
           {isAdminChecked && (
@@ -142,9 +163,30 @@ const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, department
         <p className="form-error">{createError ?? createUser.error?.message}</p>
       )}
 
-      <button className="primary-btn full-width" onClick={handleCreateUser} disabled={createUser.isPending || departments.length === 0}>
-        + add employee
-      </button>
+      {/* 3. BOTTOM BUTTONS (Fixed with inline styles to be perfectly split and purple) */}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+        <button 
+          onClick={handleCreateUser} 
+          disabled={createUser.isPending || departments.length === 0}
+          style={{
+            flex: 1, backgroundColor: '#5932EA', color: 'white', border: 'none',
+            padding: '14px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+            cursor: 'pointer', textAlign: 'center', lineHeight: '1.2'
+          }}
+        >
+          + add without default working hours
+        </button>
+        <button 
+          onClick={() => { openModal('ADD_WORKING_HOURS'); }}
+          style={{
+            flex: 1, backgroundColor: '#5932EA', color: 'white', border: 'none',
+            padding: '14px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+            cursor: 'pointer', textAlign: 'center', lineHeight: '1.2'
+          }}
+        >
+          + add default working hours
+        </button>
+      </div>
     </div>
   );
 };

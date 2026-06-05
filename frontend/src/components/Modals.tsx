@@ -9,6 +9,8 @@ import LeaveModal from './modals/LeaveModal';
 import AcceptRequestModal from './modals/AcceptRequestModal';
 import AddDepartmentModal from './modals/AddDepartmentModal';
 import EditDepartmentModal from './modals/EditDepartmentModal';
+import AddDefaultWorkingHoursModal from './modals/AddDefaultWorkingHoursModal';
+import EditEmployeeModal from './modals/EditEmployeeModal';
 
 interface Props {
   activeModal: ModalType;
@@ -25,7 +27,7 @@ interface Props {
 
 const CONFIRM_MODALS: ModalType[] = ['DELETE_EMPLOYEE', 'DELETE_LEAVE', 'CANCEL_LEAVE', 'DELETE_DEPARTMENT', 'LOGOUT', 'CHANGE_PASSWORD'];
 
-const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment, departments, confirmError, onConfirmErrorClear }) => {
+const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, selectedEmployee, selectedRequest, selectedDepartment, departments, confirmError, onConfirmErrorClear, openModal }) => {
   if (!activeModal) return null;
 
   return (
@@ -48,6 +50,7 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
             activeModal={activeModal}
             closeModal={closeModal}
             departments={departments}
+            openModal={openModal}
           />
         )}
 
@@ -85,6 +88,21 @@ const Modals: React.FC<Props> = ({ activeModal, closeModal, confirmModal, select
             selectedDepartment={selectedDepartment} 
           />
         )}
+
+        {(activeModal === 'ADD_WORKING_HOURS' || activeModal === 'EDIT_WORKING_HOURS') && (
+          <AddDefaultWorkingHoursModal 
+          closeModal={closeModal} 
+          isEditMode={activeModal === 'EDIT_WORKING_HOURS'} 
+          />
+        )}
+
+        {activeModal === 'EDIT_EMPLOYEE' && (
+        <EditEmployeeModal
+          closeModal={closeModal}
+          departments={departments}
+          selectedEmployee={selectedEmployee}
+        />
+      )}
       </div>
     </div>
   );
