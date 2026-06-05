@@ -38,7 +38,6 @@ const DepartmentsScreen: React.FC<Props> = ({ departments, loading = false, open
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="filter-dropdown"><span>Filter by</span>...</div>
         </div>
       </header>
 

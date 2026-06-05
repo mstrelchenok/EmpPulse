@@ -62,10 +62,7 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, 
             )}
           </div>
         </div>
-        <div className="header-actions">
-          <div className="search-bar"><input type="text" placeholder="Search" /></div>
-          <div className="filter-dropdown"><span>Filter by</span>...</div>
-        </div>
+        
       </header>
 
       <div className="department-detail-grid">
