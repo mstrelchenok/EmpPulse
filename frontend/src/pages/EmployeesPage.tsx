@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
 import trashIcon from '../assets/trash-icon.png.webp';
 import blackTriangleIcon from '../assets/black_triangle.png';
-import { DEPARTMENT_EMPLOYEES, UNASSIGNED_EMPLOYEES } from '../utils/mockData';
 import { useEmployeesList } from '../hooks/useEmployeesList';
 
 interface Props {
@@ -62,7 +61,11 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
           <div className="accordion-section" key={dept}>
             <h3 className="department-title" onClick={() => toggle(dept)}>
               {dept}
-              <span className={`chevron ${expanded ? 'expanded' : ''}`}>►</span>
+              <img
+                src={blackTriangleIcon}
+                alt=""
+                className={`chevron ${expanded ? 'expanded' : ''}`}
+              />
             </h3>
 
             {expanded && (
