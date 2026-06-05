@@ -67,7 +67,7 @@ public class UserService {
         UserResponse userResponse = new UserResponse(
                 user.getId(), user.getName(), user.getSurname(), user.getEmail(),
                 UserRole.OWNER.equals(user.getRole()),
-                new UserPreferencesResponse(user.getTheme(), user.getLanguage()),
+                new UserPreferencesResponse(user.getTheme().name(), user.getLanguage().name()),
                 employeeProfile, adminProfile);
 
         return new MeResponse(userResponse);
@@ -100,12 +100,12 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already in use");
         }
 
-        UserRole role = wantsAdmin ? UserRole.ADMIN : UserRole.WORKER;
+        UserRole role = wantsAdmin ? UserRole.ADMIN : UserRole.EMPLOYEE;
 
         User user = new User(
                 req.getName(), req.getSurname(), req.getEmail(),
                 passwordEncoder.encode(req.getPassword()),
-                "LIGHT", "ENG", role);
+                UserTheme.LIGHT, UserLanguage.ENG, role);
         userRepository.save(user);
 
         if (req.getYearlyVacationBalance() != null) {

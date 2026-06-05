@@ -10,9 +10,6 @@ public class UserCreateRequest {
     private Long employeeDepartmentId;
     private Integer yearlyVacationBalance;
     private List<Long> adminDepartmentIds;
-    private Boolean adminActive;
-    private Boolean employeeActive;
-
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getSurname() { return surname; }
@@ -27,8 +24,4 @@ public class UserCreateRequest {
     public void setYearlyVacationBalance(Integer yearlyVacationBalance) { this.yearlyVacationBalance = yearlyVacationBalance; }
     public List<Long> getAdminDepartmentIds() { return adminDepartmentIds; }
     public void setAdminDepartmentIds(List<Long> adminDepartmentIds) { this.adminDepartmentIds = adminDepartmentIds; }
-    public Boolean getAdminActive() { return adminActive; }
-    public void setAdminActive(Boolean adminActive) { this.adminActive = adminActive; }
-    public Boolean getEmployeeActive() { return employeeActive; }
-    public void setEmployeeActive(Boolean employeeActive) { this.employeeActive = employeeActive; }
 }
