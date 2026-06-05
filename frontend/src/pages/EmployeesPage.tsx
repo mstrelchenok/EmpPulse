@@ -23,8 +23,14 @@ function groupByDepartment(employees: Employee[]): Map<string, Employee[]> {
 const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
   const { data: employees = [], isLoading } = useEmployeesList();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState('');
 
-  const groups = groupByDepartment(employees);
+  const query = search.trim().toLowerCase();
+  const filtered = query
+    ? employees.filter((emp) => (emp.surname ?? '').toLowerCase().startsWith(query))
+    : employees;
+
+  const groups = groupByDepartment(filtered);
 
   const toggle = (dept: string) =>
     setCollapsed((prev) => ({ ...prev, [dept]: !prev[dept] }));
@@ -34,7 +40,14 @@ const EmployeesPage: React.FC<Props> = ({ openModal, openEmployeeProfile }) => {
       <header className="page-header">
         <h2>Employees</h2>
         <div className="header-actions">
-          <div className="search-bar"><input type="text" placeholder="Search" /></div>
+          <div className="search-bar">
+            <input
+              type="text"
+              placeholder="Search by surname"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <div className="filter-dropdown"><span>Filter by</span>...</div>
         </div>
       </header>
