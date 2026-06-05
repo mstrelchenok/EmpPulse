@@ -1,17 +1,12 @@
 package com.oman.EmpPulse.controller;
 
 import com.oman.EmpPulse.dto.UserCreateRequest;
+import com.oman.EmpPulse.security.AuthUtils;
 import com.oman.EmpPulse.service.UserService;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,18 +19,14 @@ public class UserController {
     }
 
     @GetMapping("/api/me")
-    public ResponseEntity<?> getMe(@AuthenticationPrincipal Long userId) {
-        return ResponseEntity.ok(userService.buildMeResponse(userId));
+    public ResponseEntity<?> getMe(Authentication authentication) {
+        return ResponseEntity.ok(userService.buildMeResponse(AuthUtils.getUserId(authentication)));
     }
 
     @PreAuthorize("hasAnyAuthority('OWNER', 'ADMIN')")
     @PostMapping("/api/users")
     public ResponseEntity<?> createUser(@RequestBody UserCreateRequest req, Authentication authentication) {
-        String callerRole = authentication.getAuthorities().stream()
-                .findFirst()
-                .map(GrantedAuthority::getAuthority)
-                .orElseThrow();
-        userService.createUser(req, callerRole);
+        userService.createUser(req, AuthUtils.getRole(authentication));
         return ResponseEntity.noContent().build();
     }
 

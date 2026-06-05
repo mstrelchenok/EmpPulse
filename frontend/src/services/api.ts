@@ -1,5 +1,12 @@
 import type { MeUser, Department, DepartmentAdmin, Employee } from '../types';
 
+function getCsrfToken(): string {
+  return document.cookie
+    .split('; ')
+    .find(row => row.startsWith('XSRF-TOKEN='))
+    ?.split('=')[1] ?? '';
+}
+
 // Carries the HTTP status so callers (e.g. the React Query retry predicate) can
 // distinguish client (4xx) from server/network errors without parsing messages.
 export class ApiError extends Error {
@@ -37,7 +44,7 @@ export const authService = {
   login: async (email: string, password: string): Promise<MeUser> => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
       credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
@@ -52,7 +59,11 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+      headers: { 'X-XSRF-TOKEN': getCsrfToken() },
+      credentials: 'include',
+    });
   },
 };
 
@@ -70,7 +81,7 @@ export const userService = {
   create: async (payload: UserCreatePayload): Promise<void> => {
     const res = await fetch('/api/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
       credentials: 'include',
       body: JSON.stringify(payload),
     });
@@ -147,7 +158,7 @@ export const departmentService = {
   create: async (payload: DepartmentCreatePayload): Promise<void> => {
     const res = await fetch('/api/departments', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
       credentials: 'include',
       body: JSON.stringify(payload),
     });
@@ -162,6 +173,7 @@ export const departmentService = {
   delete: async (id: number): Promise<void> => {
     const res = await fetch(`/api/departments/${id}`, {
       method: 'DELETE',
+      headers: { 'X-XSRF-TOKEN': getCsrfToken() },
       credentials: 'include',
     });
     if (!res.ok) {
@@ -173,7 +185,7 @@ export const departmentService = {
   update: async (id: number, payload: { name?: string; adminIds?: number[] }): Promise<void> => {
     const res = await fetch(`/api/departments/${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': getCsrfToken() },
       credentials: 'include',
       body: JSON.stringify(payload),
     });

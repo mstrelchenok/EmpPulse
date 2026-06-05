@@ -2,6 +2,7 @@ package com.oman.EmpPulse.controller;
 
 import com.oman.EmpPulse.dto.DepartmentCreateRequest;
 import com.oman.EmpPulse.dto.DepartmentUpdateRequest;
+import com.oman.EmpPulse.security.AuthUtils;
 import com.oman.EmpPulse.service.DepartmentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,12 +25,10 @@ public class DepartmentController {
     @PreAuthorize("hasAnyAuthority('OWNER', 'ADMIN')")
     @GetMapping
     public ResponseEntity<?> listDepartments(Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-
-        if (isOwner(authentication)) {
+        if (AuthUtils.isOwner(authentication)) {
             return ResponseEntity.ok(departmentService.getAllDepartments());
         }
-        return ResponseEntity.ok(departmentService.getDepartmentsForAdmin(userId));
+        return ResponseEntity.ok(departmentService.getDepartmentsForAdmin(AuthUtils.getUserId(authentication)));
     }
     
     @PreAuthorize("hasAuthority('OWNER')")
@@ -43,10 +42,9 @@ public class DepartmentController {
     @GetMapping("/{departmentId}")
     public ResponseEntity<?> getDepartment(@PathVariable Long departmentId,
                                            Authentication authentication) {
-        Long userId = (Long) authentication.getPrincipal();
-        boolean isAdminOfDepartment = departmentService.isAdminOfDepartment(userId, departmentId);
+        boolean isAdminOfDepartment = departmentService.isAdminOfDepartment(AuthUtils.getUserId(authentication), departmentId);
 
-        if (isOwner(authentication) || isAdminOfDepartment) {
+        if (AuthUtils.isOwner(authentication) || isAdminOfDepartment) {
             return ResponseEntity.ok(departmentService.getDepartment(departmentId));
         }
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -68,8 +66,4 @@ public class DepartmentController {
         return ResponseEntity.noContent().build();
     }
 
-    private boolean isOwner(Authentication authentication) {
-        return authentication.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("OWNER"));
-    }
 }
