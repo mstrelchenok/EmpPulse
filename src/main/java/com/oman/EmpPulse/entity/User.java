@@ -23,16 +23,18 @@ public class User {
     @Column(name = "pass_hash", nullable = false)
     private String passHash;
 
-    @Column(nullable = false, columnDefinition = "theme")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @ColumnTransformer(write = "?::theme")
-    private String theme;
-
-    @Column(nullable = false, columnDefinition = "language")
-    @ColumnTransformer(write = "?::language")
-    private String language;
+    private UserTheme theme;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "role")
+    @Column(nullable = false)
+    @ColumnTransformer(write = "?::language")
+    private UserLanguage language;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @ColumnTransformer(write = "?::role")
     private UserRole role;
 
@@ -41,7 +43,7 @@ public class User {
 
     public User() {}
 
-    public User(String name, String surname, String email, String passHash, String theme, String language, UserRole role) {
+    public User(String name, String surname, String email, String passHash, UserTheme theme, UserLanguage language, UserRole role) {
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -66,11 +68,11 @@ public class User {
     public String getPassHash() { return passHash; }
     public void setPassHash(String passHash) { this.passHash = passHash; }
     
-    public String getTheme() { return theme; }
-    public void setTheme(String theme) { this.theme = theme; }
+    public UserTheme getTheme() { return theme; }
+    public void setTheme(UserTheme theme) { this.theme = theme; }
     
-    public String getLanguage() { return language; }
-    public void setLanguage(String language) { this.language = language; }
+    public UserLanguage getLanguage() { return language; }
+    public void setLanguage(UserLanguage language) { this.language = language; }
     
     public UserRole getRole() { return role; }
     public void setRole(UserRole role) { this.role = role; }

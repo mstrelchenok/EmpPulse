@@ -1019,12 +1019,6 @@ components:
           additionalProperties: true
           nullable: true
 
-    SortOrder:
-      type: string
-      enum:
-        - asc
-        - desc
-
     Theme:
       type: string
       enum:

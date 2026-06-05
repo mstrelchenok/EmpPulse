@@ -48,15 +48,13 @@ public class AuthController {
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                 user.getId(), null,
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())));
+                List.of(new SimpleGrantedAuthority(user.getRole().name())));
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(auth);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
         HttpSession session = request.getSession(true);
-        session.setAttribute("USER_ID", user.getId());
-        session.setAttribute("USER_ROLE", user.getRole().name());
         session.setAttribute("USER_THEME", user.getTheme());
         session.setAttribute("USER_LANGUAGE", user.getLanguage());
 
@@ -66,7 +64,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         SecurityContextHolder.clearContext();
-        securityContextRepository.saveContext(SecurityContextHolder.createEmptyContext(), request, response);
         HttpSession session = request.getSession(false);
         if (session != null) session.invalidate();
         return ResponseEntity.ok("Logout successful");
