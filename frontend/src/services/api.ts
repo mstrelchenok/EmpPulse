@@ -80,6 +80,18 @@ export const userService = {
       });
     }
   },
+
+  delete: async (userId: number): Promise<void> => {
+    const res = await fetch(`/api/users/${userId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      throw await clientSafeError(res, 'Failed to delete employee.', {
+        403: 'Only the owner can delete employees.',
+      });
+    }
+  },
 };
 
 // Raw item shape from GET /api/employees (EmployeeSummaryResponse).

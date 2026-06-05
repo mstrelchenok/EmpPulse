@@ -77,7 +77,7 @@ public class EmployeeService {
             deptName = departmentRepository.findById(employee.getDepartmentId())
                     .map(Department::getName).orElse(null);
         }
-        return new EmployeeSummaryResponse(employee.getId(), user.getName(), user.getSurname(),
+        return new EmployeeSummaryResponse(employee.getUserId(), user.getName(), user.getSurname(),
                 employee.getDepartmentId(), deptName);
     }
 }
