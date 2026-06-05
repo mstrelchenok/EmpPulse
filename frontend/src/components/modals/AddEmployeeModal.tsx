@@ -1,0 +1,194 @@
+import React, { useState } from 'react';
+import type { ModalType, Department } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { useCreateUser } from '../../hooks/useCreateUser';
+
+interface Props {
+  activeModal: ModalType;
+  closeModal: () => void;
+  departments: Department[];
+  openModal: (modal: ModalType, payload?: any) => void;
+}
+
+const AddEmployeeModal: React.FC<Props> = ({ activeModal, closeModal, departments, openModal }) => {
+  const { userRole } = useAuth();
+  // An admin can only ever create plain employees (no admin accounts, no role choice).
+  const isAdminCreator = userRole === 'ADMIN';
+
+  const [isEmployeeChecked, setIsEmployeeChecked] = useState(true);
+  const [isAdminChecked, setIsAdminChecked] = useState(true);
+
+  // When an admin opens the create form, force employee-only (no admin role).
+  React.useEffect(() => {
+    if (activeModal === 'ADD_EMPLOYEE' && isAdminCreator) {
+      setIsEmployeeChecked(true);
+      setIsAdminChecked(false);
+    }
+  }, [activeModal, isAdminCreator]);
+
+  const [newName, setNewName] = useState('');
+  const [newSurname, setNewSurname] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  // Department selections (null = none chosen yet)
+  const [employeeDeptId, setEmployeeDeptId] = useState<number | null>(null);
+  const [adminDeptId, setAdminDeptId] = useState<number | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const createUser = useCreateUser();
+
+  const resetCreateUserForm = () => {
+    setNewName(''); setNewSurname(''); setNewEmail(''); setNewPassword('');
+    setEmployeeDeptId(null); setAdminDeptId(null);
+    setCreateError(null);
+  };
+
+  const handleCreateUser = () => {
+    setCreateError(null);
+    if (!newName.trim() || !newSurname.trim() || !newEmail.trim() || !newPassword) {
+      setCreateError('Name, surname, email and password are required.');
+      return;
+    }
+    // A user with no role is meaningless — must be employee and/or admin.
+    if (!isEmployeeChecked && !isAdminChecked) {
+      setCreateError('User must be assigned at least one role: Employee or Administrator.');
+      return;
+    }
+    // A department must be chosen for every selected role — creating without one is not allowed.
+    if (isEmployeeChecked && employeeDeptId === null) {
+      setCreateError('Please select a department for the employee role before creating the user.');
+      return;
+    }
+    if (isAdminChecked && adminDeptId === null) {
+      setCreateError('Please select a department for the administrator role before creating the user.');
+      return;
+    }
+
+    createUser.mutate(
+      {
+        name: newName.trim(),
+        surname: newSurname.trim(),
+        email: newEmail.trim(),
+        password: newPassword,
+        ...(isEmployeeChecked ? { employeeDepartmentId: employeeDeptId, yearlyVacationBalance: 0 } : {}),
+        // undefined = no admin role; array = admin assigned to the chosen department
+        adminDepartmentIds: isAdminChecked && adminDeptId !== null ? [adminDeptId] : undefined,
+      },
+      {
+        onSuccess: () => {
+          resetCreateUserForm();
+          closeModal();
+        },
+      },
+    );
+  };
+
+  return (
+    <div className="modal-form">
+      <h2>Add employee</h2>
+
+      <label>First name<input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} /></label>
+      <label>Surname<input type="text" value={newSurname} onChange={(e) => setNewSurname(e.target.value)} /></label>
+      <label>Email<input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} /></label>
+      <label>Password<input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} /></label>
+
+      {/* 1. EMPLOYEE CHECKBOX (Fixed with inline styles) */}
+      {!isAdminCreator && (
+        <div 
+          onClick={() => setIsEmployeeChecked(!isEmployeeChecked)}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}
+        >
+          <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: '#000' }}>Employee</h3>
+          <div style={{
+            width: '24px', height: '24px', border: '2px solid #5932EA', borderRadius: '4px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#5932EA', fontSize: '16px', fontWeight: 'bold', transition: 'all 0.1s ease'
+          }}>
+            {isEmployeeChecked ? '✕' : ''}
+          </div>
+        </div>
+      )}
+
+      {isEmployeeChecked && (
+        <label className="field-tight">Department
+          <select
+            value={employeeDeptId ?? ''}
+            onChange={(e) => setEmployeeDeptId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="" disabled>select department</option>
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      {/* 2. ADMINISTRATOR CHECKBOX (Fixed with inline styles) */}
+      {!isAdminCreator && (
+        <>
+          <div 
+            onClick={() => setIsAdminChecked(!isAdminChecked)}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}
+          >
+            <h3 style={{ fontSize: '18px', fontWeight: 600, margin: 0, color: '#000' }}>Administrator</h3>
+            <div style={{
+              width: '24px', height: '24px', border: '2px solid #5932EA', borderRadius: '4px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#5932EA', fontSize: '16px', fontWeight: 'bold', transition: 'all 0.1s ease'
+            }}>
+              {isAdminChecked ? '✕' : ''}
+            </div>
+          </div>
+
+          {isAdminChecked && (
+            <label>Administrator of
+              <select
+                value={adminDeptId ?? ''}
+                onChange={(e) => setAdminDeptId(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="" disabled>select department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </label>
+          )}
+        </>
+      )}
+
+      {departments.length === 0 && (
+        <p className="form-error">No departments exist yet. Create a department before adding users.</p>
+      )}
+
+      {(createError || createUser.error) && (
+        <p className="form-error">{createError ?? createUser.error?.message}</p>
+      )}
+
+      {/* 3. BOTTOM BUTTONS (Fixed with inline styles to be perfectly split and purple) */}
+      <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+        <button 
+          onClick={handleCreateUser} 
+          disabled={createUser.isPending || departments.length === 0}
+          style={{
+            flex: 1, backgroundColor: '#5932EA', color: 'white', border: 'none',
+            padding: '14px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+            cursor: 'pointer', textAlign: 'center', lineHeight: '1.2'
+          }}
+        >
+          + add without default working hours
+        </button>
+        <button 
+          onClick={() => { openModal('ADD_WORKING_HOURS'); }}
+          style={{
+            flex: 1, backgroundColor: '#5932EA', color: 'white', border: 'none',
+            padding: '14px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 500,
+            cursor: 'pointer', textAlign: 'center', lineHeight: '1.2'
+          }}
+        >
+          + add default working hours
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default AddEmployeeModal;

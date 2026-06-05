@@ -1,60 +1,63 @@
 import React, { useState } from 'react';
-import type { ScreenType } from '../types';
+import type { MeUser } from '../types';
+import { useAuth } from '../context/AuthContext';
 
 interface Props {
-  onLoginSuccess: (nextScreen: ScreenType) => void;
+  onLoginSuccess: (user: MeUser) => void;
 }
 
 const LoginPage: React.FC<Props> = ({ onLoginSuccess }) => {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
-    // Basic authentication check matching your flow
-    if (email && password) {
-      onLoginSuccess('employees');
-    } else {
-      setError('Please fill in both fields.');
+    setError('');
+    setLoading(true);
+    try {
+      const user = await login(email, password);
+      onLoginSuccess(user);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    /* 1. auth-layout forces full screen height, grey background, and centers content */
     <div className="auth-layout">
-      
-      
       <div className="auth-card">
-        
         <h1 className="auth-brand">EmpPulse</h1>
         <h2 className="auth-title">Log In</h2>
-        
+
         {error && <div className="auth-error-msg">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <label className="auth-input-label">
             Email
-            <input 
-              type="email"  
-              value={email} 
+            <input
+              type="email"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
             />
           </label>
 
           <label className="auth-input-label">
             Password
-            <input 
-              type="password"  
-              value={password} 
+            <input
+              type="password"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
             />
           </label>
 
-          <button type="submit" className="primary-btn auth-submit-btn">
-            log in
+          <button type="submit" className="primary-btn auth-submit-btn" disabled={loading}>
+            {loading ? 'Logging in…' : 'log in'}
           </button>
         </form>
       </div>

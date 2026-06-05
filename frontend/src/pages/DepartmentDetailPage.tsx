@@ -1,18 +1,32 @@
-// src/components/screens/DepartmentDetailScreen.tsx
 import React from 'react';
 import type { Department, ModalType } from '../types';
+import { useAuth } from '../context/AuthContext';
+import blackTriangleIcon from '../assets/black_triangle.png';
+import EditIcon from '../assets/edit_icon.png';
 
 interface Props {
   department: Department | null;
+  loading?: boolean;
   openModal: (modal: ModalType, dept?: Department) => void;
   onBack: () => void;
 }
 
-const allDaysOrdered: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-];
+// NOTE: The default working-hours feature is not wired to the API yet, so the
+// working-hours table and its button are commented out below (kept for later).
+// const allDaysOrdered: ('Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday')[] = [
+//   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+// ];
 
-const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack }) => {
+const DepartmentDetailScreen: React.FC<Props> = ({ department, loading = false, openModal, onBack }) => {
+  const { userRole } = useAuth();
+  if (loading && !department) {
+    return (
+      <div className="screen-container">
+        <p>Loading department…</p>
+      </div>
+    );
+  }
+
   if (!department) {
     return (
       <div className="screen-container">
@@ -22,47 +36,62 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack
     );
   }
 
-  // Pre-process shifts to handle sparse schedule mapping safely
-  const getShiftsForDay = (dayName: string) => {
-    const found = department.schedule.find(s => s.day === dayName);
-    return found ? found.shifts : [];
-  };
+  const isOwner = userRole === 'OWNER';
 
   return (
-    <div className="screen-container" style={{ maxWidth: 1080 }}>
-      <header className="page-header" style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <button className="btn-pill-secondary" onClick={onBack}>►</button>
-          <h2>{department.name}</h2>
+    <div className="screen-container department-detail-screen">
+      <header className="page-header">
+        <div className="department-detail-title">
+          <button className="btn-pill-secondary" onClick={onBack}><img 
+            src={blackTriangleIcon} 
+            alt="Back to departments list"
+          /></button>
+          <div className="department-detail-title_row">
+            <h2>{department.name}</h2>
+            {isOwner && (
+              <button 
+                className="btn-edit-action" 
+                onClick={() => openModal('EDIT_DEPARTMENT', department)}
+                style={{ marginLeft: '12px' }}
+              >
+                <img 
+                  src={EditIcon} 
+                  alt="Edit department name"
+              />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="header-actions">
-          <div className="search-bar"><input type="text" placeholder="Search" /></div>
-          <div className="filter-dropdown"><span>Filter by</span>...</div>
-        </div>
+        
       </header>
 
       <div className="department-detail-grid">
         {/* Administrator Column */}
         <div className="detail-column">
           <h3 className="column-section-title">Admins</h3>
-          <div className="card-box list-box" style={{ padding: 20 }}>
-            {department.administrators.map((adminName, index) => (
-              <div key={index} className="admin-block-item">
-                {adminName}
+          <div className="card-box list-box department-detail-card">
+            {department.admins.length === 0 && (
+              <div className="admin-block-item">No administrators assigned.</div>
+            )}
+            {department.admins.map((admin) => (
+              <div key={admin.id} className="admin-block-item">
+                {admin.user.name} {admin.user.surname}
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 20 }}>
-            <button 
-              className="primary-btn" 
-              onClick={() => openModal('EDIT_ADMINS', department)}
-            >
-              edit admins
-            </button>
-          </div>
+          {isOwner && (
+            <div className="detail-action-row">
+              <button
+                className="primary-btn"
+                onClick={() => openModal('EDIT_ADMINS', department)}
+              >
+                edit admins
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Working Hours Matrix Column */}
+        {/*
         <div className="detail-column">
           <h3 className="column-section-title">Default working hours</h3>
           <div className="card-box schedule-matrix-card">
@@ -79,7 +108,7 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack
                         <span className="shift-index">{sIdx + 1})</span>
                         <div className="time-range-display">
                           <span>{shift.start}</span>
-                          <span style={{ margin: '0 8px', opacity: 0.6 }}>—</span>
+                          <span className="muted-separator">—</span>
                           <span>{shift.end}</span>
                         </div>
                       </div>
@@ -89,15 +118,16 @@ const DepartmentDetailScreen: React.FC<Props> = ({ department, openModal, onBack
               );
             })}
           </div>
-          <div style={{ marginTop: 20 }}>
-            <button 
-              className="primary-btn" 
+          <div className="detail-action-row">
+            <button
+              className="primary-btn"
               onClick={() => openModal('EDIT_WORKING_HOURS', department)}
             >
               edit working hours
             </button>
           </div>
         </div>
+        */}
       </div>
     </div>
   );

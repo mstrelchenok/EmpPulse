@@ -23,21 +23,27 @@ public class User {
     @Column(name = "pass_hash", nullable = false)
     private String passHash;
 
-    @Column(nullable = false, columnDefinition = "theme")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @ColumnTransformer(write = "?::theme")
-    private String theme;
+    private UserTheme theme;
 
-    @Column(nullable = false, columnDefinition = "language")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @ColumnTransformer(write = "?::language")
-    private String language;
+    private UserLanguage language;
 
-    @Column(nullable = false, columnDefinition = "role")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @ColumnTransformer(write = "?::role")
-    private String role; // "OWNER", "ADMIN", "WORKER"
+    private UserRole role;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
 
     public User() {}
 
-    public User(String name, String surname, String email, String passHash, String theme, String language, String role) {
+    public User(String name, String surname, String email, String passHash, UserTheme theme, UserLanguage language, UserRole role) {
         this.name = name;
         this.surname = surname;
         this.email = email;
@@ -62,12 +68,15 @@ public class User {
     public String getPassHash() { return passHash; }
     public void setPassHash(String passHash) { this.passHash = passHash; }
     
-    public String getTheme() { return theme; }
-    public void setTheme(String theme) { this.theme = theme; }
+    public UserTheme getTheme() { return theme; }
+    public void setTheme(UserTheme theme) { this.theme = theme; }
     
-    public String getLanguage() { return language; }
-    public void setLanguage(String language) { this.language = language; }
+    public UserLanguage getLanguage() { return language; }
+    public void setLanguage(UserLanguage language) { this.language = language; }
     
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public UserRole getRole() { return role; }
+    public void setRole(UserRole role) { this.role = role; }
+
+    public boolean isDeleted() { return isDeleted; }
+    public void setDeleted(boolean deleted) { this.isDeleted = deleted; }
 }
