@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
 import trashIcon from '../assets/trash-icon.png.webp';
+import blackTriangleIcon from '../assets/black_triangle.png';
+import { DEPARTMENT_EMPLOYEES, UNASSIGNED_EMPLOYEES } from '../utils/mockData';
 import { useEmployeesList } from '../hooks/useEmployeesList';
 
 interface Props {

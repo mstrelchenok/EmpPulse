@@ -7,14 +7,14 @@ Branches are created off `main` and merged back via pull request.
 Use lowercase kebab-case with a short, descriptive name:
 
 ```
-feature/short-description
+feat/short-description
 ```
 
 Examples:
 ```
-feature/leave-request-overlap-check
-feature/default-week-hours-inheritance
-feature/employee-department-transfer
+feat/leave-request-overlap-check
+feat/default-week-hours-inheritance
+feat/employee-department-transfer
 ```
 
 Keep branch names concise — they don't need to include the ticket number.

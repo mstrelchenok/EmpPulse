@@ -25,7 +25,7 @@ export interface Department {
 export interface Employee {
   id: string;
   name: string;
-  surname?: string;
+  surname: string;
   email?: string;
   department?: string;
   role?: string;
@@ -88,4 +88,5 @@ export type ModalType =
   | 'CREATE_REQUEST' | 'ACCEPT_REQUEST' 
   | 'ADD_REQUEST_FORM' | 'EDIT_LEAVE_FORM' 
   | 'DELETE_LEAVE' | 'CANCEL_LEAVE' | 'LOGOUT' | 'CHANGE_PASSWORD_CONFIRM' 
-  | 'CHANGE_PASSWORD_FORM' | 'CHANGE_PASSWORD'; 
+  | 'CHANGE_PASSWORD_FORM' | 'CHANGE_PASSWORD'| 'EDIT_DEPARTMENT'| 'ADD_WORKING_HOURS' 
+  | 'EDIT_WORKING_HOURS'| 'EDIT_EMPLOYEE'; 

@@ -2,14 +2,16 @@ import React, { useState } from 'react';
 import type { ModalType, Employee, LeaveRequest } from '../types';
 import { MOCK_LOGGED_HOURS } from '../utils/mockData';
 import { useAuth } from '../context/AuthContext';
+import blackTriangleIcon from '../assets/black_triangle.png';
 
 interface Props {
   isMyProfile?: boolean;
   employee?: Employee | null;
   openModal: (modal: ModalType, emp?: Employee, requestObj?: LeaveRequest) => void;
+  onBack: () => void;
 }
 
-const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
+const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal, onBack }) => {
   const { currentUser } = useAuth();
   const [loggedExpanded, setLoggedExpanded] = useState(true);
   const [unpaidExpanded, setUnpaidExpanded] = useState(true);
@@ -23,6 +25,10 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
 
   return (
     <div className="screen-container">
+      <button className="btn-pill-secondary" onClick={onBack}><img 
+            src={blackTriangleIcon} 
+            alt="Back to employees list"
+          /></button>
       <header className="page-header profile-header">
         <h2>{isMyProfile ? 'My Profile' : "Employee's Profile"}</h2>
         {isMyProfile && (
@@ -44,9 +50,9 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
             {!isMyProfile && (
               <button
                 className="btn-pill-action"
-                onClick={() => alert('Edit profile triggered')}
+                onClick={() => openModal('EDIT_EMPLOYEE', employee as Employee)}
               >
-                Edit profile
+              Edit profile
               </button>
             )}
           </div>
@@ -61,6 +67,71 @@ const ProfilePage: React.FC<Props> = ({ isMyProfile, employee, openModal }) => {
           <h4>Vacation balance</h4>
           <div className="balance-badge-card">Vacations day left: </div>
         </div>
+      </div>
+
+      
+      <div className="accordion-section">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <h3 className="department-title" style={{ marginBottom: 0, fontSize: '20px' }}>
+            Default working hours
+          </h3>
+          <span className="chevron expanded">🡇</span>
+        </div>
+
+        <div className="card-box" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+    
+          <div className="shifts-stack">
+            <div className="day-label">Monday</div>
+            <div className="shift-pill-row">
+              <span className="shift-index">1)</span>
+            <div className="time-range-display"><span>9:00</span> <span className="muted-separator">—</span> <span>17:00</span></div>
+            </div>
+            <div className="shift-pill-row">
+              <span className="shift-index">2)</span>
+              <div className="time-range-display"><span>17:00</span> <span className="muted-separator">—</span> <span>20:00</span></div>
+            </div>
+      
+            <div className="day-label" style={{ marginTop: '16px' }}>Tuesday</div>
+            <div className="shift-pill-row">
+              <span className="shift-index">1)</span>
+              <div className="time-range-display"><span>9:00</span> <span className="muted-separator">—</span> <span>17:00</span></div>
+            </div>
+          </div>
+
+          <div className="shifts-stack">
+            <div className="day-label">Wednesday</div>
+            <div className="shift-pill-row">
+              <span className="shift-index">1)</span>
+              <div className="time-range-display"><span>9:00</span> <span className="muted-separator">—</span> <span>17:00</span></div>
+            </div>
+
+            <div className="day-label" style={{ marginTop: '16px' }}>Thursday</div>
+            <div className="shift-pill-row">
+              <span className="shift-index">1)</span>
+              <div className="time-range-display"><span>9:00</span> <span className="muted-separator">—</span> <span>17:00</span></div>
+            </div>
+          </div>
+
+          <div className="shifts-stack">
+            <div className="day-label">Friday</div>
+            <div className="shift-pill-row">
+              <span className="shift-index">1)</span>
+              <div className="time-range-display"><span>9:00</span> <span className="muted-separator">—</span> <span>17:00</span></div>
+            </div>
+        </div>
+
+        </div>
+
+        {!isMyProfile && (
+          <div className="center-action tight">
+            <button 
+              className="primary-btn" 
+              onClick={() => openModal('EDIT_WORKING_HOURS', employee as Employee)}
+            >
+              edit working hours
+            </button>
+          </div>
+        )}
       </div>
 
       {/*

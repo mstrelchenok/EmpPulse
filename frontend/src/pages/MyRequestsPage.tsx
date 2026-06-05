@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ModalType, LeaveRequest } from '../types';
 import trashIcon from '../assets/trash-icon.png.webp';
+import blackTriangleIcon from '../assets/black_triangle.png';
 
 interface Props { 
   openModal: (modal: ModalType, emp?: null, requestObj?: LeaveRequest) => void; 
@@ -25,7 +26,11 @@ const MyRequestsScreen: React.FC<Props> = ({ openModal }) => {
 
       <div className="accordion-section">
         <h3 className="department-title" onClick={() => setExpanded(!expanded)}>
-          Last requests <span className={`chevron ${expanded ? 'expanded' : ''}`}>►</span>
+          Last requests <img 
+          src={blackTriangleIcon} 
+          alt="Toggle last requests" 
+          className={`chevron ${expanded ? 'expanded' : ''}`} 
+        />
         </h3>
 
         {expanded && (
